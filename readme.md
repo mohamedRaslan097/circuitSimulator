@@ -1,7 +1,5 @@
 # Circuit Simulator Project - Development Timeline & Phases
 
-Great choice for a self-improvement project! A circuit simulator is an excellent way to deepen your C++ skills while working with interesting algorithms and data structures. Here's a comprehensive project roadmap:
-
 ## 🚀 Quick Start
 
 ### Prerequisites
