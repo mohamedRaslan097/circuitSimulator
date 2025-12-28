@@ -1,0 +1,9 @@
+build/
+*.exe
+*.o
+*.obj
+*.out
+*.app
+.vscode/
+*.log
+*.tmp

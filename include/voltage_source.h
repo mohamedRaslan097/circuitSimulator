@@ -1,0 +1,22 @@
+#ifndef VOLTAGE_SOURCE_H
+#define VOLTAGE_SOURCE_H
+
+#include "Component.h"
+
+class Voltage_source : public Component {
+private:
+    static int id_counter;
+    static constexpr const char* default_id = "V";
+    static constexpr const char* type = "Voltage Source";
+protected:
+    double voltage;
+    double current;
+public:
+    Voltage_source(const std::string& id, Node* ni, Node* nj, double v = 0);
+    Voltage_source(Node* ni, Node* nj, double v);
+    virtual double get_voltage_drop() override;
+    virtual double get_current() override;
+    virtual void print(std::ostream& os) const override;
+};
+
+#endif

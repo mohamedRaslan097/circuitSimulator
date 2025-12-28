@@ -1,0 +1,5 @@
+* Test Circuit
+* Author: QA Team
+* Date: 2025
+V1 1 0 10.0
+R1 1 0 2000

@@ -1,0 +1,4 @@
+* RC Circuit Test
+V1 1 0 5.0
+* This is a longer comment
+R1 1 0 1000
