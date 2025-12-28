@@ -2,6 +2,63 @@
 
 Great choice for a self-improvement project! A circuit simulator is an excellent way to deepen your C++ skills while working with interesting algorithms and data structures. Here's a comprehensive project roadmap:
 
+## 🚀 Quick Start
+
+### Prerequisites
+- C++17 compatible compiler (g++ recommended)
+- Windows with MSYS2/MinGW (or equivalent on Linux/Mac)
+
+### Building the Project
+
+**Compile the main program:**
+```bash
+g++ -fdiagnostics-color=always -g -Wall -std=c++17 -I./include src/*.cpp main/main.cpp -o build/debug/main.exe
+```
+
+**Compile component tests:**
+```bash
+g++ -fdiagnostics-color=always -g -Wall -std=c++17 -I./include src/*.cpp tests/test_components.cpp -o build/debug/test_components.exe
+```
+
+**Compile netlist parsing tests:**
+```bash
+g++ -fdiagnostics-color=always -g -Wall -std=c++17 -I./include src/*.cpp tests/test_netlist_parsing.cpp -o build/debug/test_netlist_parsing.exe
+```
+
+### Running the Program
+
+**Run the simulator:**
+```bash
+./build/debug/main.exe
+```
+The program expects a `netlist.txt` file in the root directory.
+
+**Run tests:**
+```bash
+./build/debug/test_components.exe
+./build/debug/test_netlist_parsing.exe
+```
+
+### Netlist Format
+The simulator uses a SPICE-like netlist format:
+```
+* Comment line
+V1 node- node+ value
+R1 node1 node2 resistance
+I1 node- node+ current
+```
+
+Example (Wheatstone Bridge):
+```
+* Wheatstone Bridge
+V1 1 0 10.0
+R1 1 2 1000
+R2 2 0 1000
+R3 1 3 1000
+R4 3 0 1000
+R5 2 3 100
+```
+
 ## 📋 Phase 1: Foundation & Core Architecture ✅
 ### Objectives:
 

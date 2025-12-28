@@ -14,7 +14,6 @@ void test_resistor_creation() {
     
     ostringstream oss;
     r1.print(oss);
-    cout << r1 <<endl;
     string output = oss.str();
     assert(output.find("R(R1)") != string::npos);
     assert(output.find("100.0000 Ohms") != string::npos);

@@ -1,0 +1,9 @@
+* Circuit with various comments
+*
+* Empty comment above
+V1 1 0 5.0
+* Voltage source defined
+R1 1 2 1000
+*
+R2 2 0 2000
+* End of circuit

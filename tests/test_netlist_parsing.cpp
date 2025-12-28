@@ -207,7 +207,9 @@ void test_component_value_precision() {
 
 void test_existing_netlist_file() {
     Circuit circuit("Test");
-    circuit.parse_netlist(TEST_DIR + "netlist.txt");
+    
+    string filename = "netlist.txt";
+    circuit.parse_netlist(TEST_DIR + filename);
     
     ostringstream oss;
     circuit.print(oss);
@@ -228,7 +230,7 @@ void test_existing_comment_netlist_file() {
     Circuit circuit("Test");
     
     try {
-        circuit.parse_netlist("test_netlist_comments.txt");
+        circuit.parse_netlist(TEST_DIR + "test_netlist_comments.txt");
         
         ostringstream oss;
         circuit.print(oss);
@@ -241,13 +243,13 @@ void test_existing_comment_netlist_file() {
         while((pos = output.find("R(R", pos)) != string::npos) { r_count++; pos++; }
         
         if(v_count != 1 || r_count != 2) {
-            cout << "[ISSUE] test_netlist_comments.txt: Expected 1V 2R, Found " << v_count << "V " << r_count << "R" << endl;
+            cout << "[ISSUE] Existing comment netlist: Expected 1V 2R, Found " << v_count << "V " << r_count << "R" << endl;
         } else {
-            cout << "[PASS] test_netlist_comments.txt parsing" << endl;
+            cout << "[PASS] Existing comment netlist parsing" << endl;
         }
         
     } catch(const exception& e) {
-        cout << "[ISSUE] test_netlist_comments.txt exception: " << e.what() << endl;
+        cout << "[ISSUE] Existing comment netlist exception: " << e.what() << endl;
     }
 }
 

@@ -64,7 +64,11 @@ void Circuit::parse_netlist(const std::string& filename) {
     while (file >> component_id)
     {
         if(component_id[0] == '*')
+        {
+            std::string comment_line;
+            getline(file, comment_line);
             continue;
+        }
         
         if(!(file >> node1_id >> node2_id >> value))
             throw std::runtime_error("Error parsing netlist line for component: " + component_id);
