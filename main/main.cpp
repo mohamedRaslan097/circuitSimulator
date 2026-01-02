@@ -1,15 +1,29 @@
 #include "Include.h"
+#include "ui.h"
 
 using namespace std;
 
-const string CWD = "main/";
-
 int main(int argc, char* argv[]) {
     Timer timer;
+    
+    // Parse command-line arguments
+    UI ui;
+    if(!ui.parse_arguments(argc, argv)) {
+        return 1;
+    }
+    
+    // Parse and assemble circuit
     Circuit circuit;
-    string netlist_file_path = CWD + "netlist.txt";
-    circuit.parse_netlist(netlist_file_path);
+    circuit.parse_netlist(ui.get_input_file());
     circuit.assemble_MNA_system();
-    cout << circuit << endl;
+    
+    // Generate output
+    stringstream ss;
+    ss << circuit << endl;
+    string circuit_output = ss.str();
+    
+    // Output results
+    ui.output_results(circuit_output);
+    
     return 0;
 }

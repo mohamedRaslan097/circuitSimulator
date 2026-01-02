@@ -22,9 +22,11 @@ protected:
 public:
     Circuit(std::string name="Circuit");
     void parse_netlist(const std::string& filename);
-    virtual void print(std::ostream& os = std::cout) const override;
     void assemble_MNA_system();
-    void display_MNA_system(std::ostream& os = std::cout) const;
+    void print_nodes(std::ostream& os = std::cout) const;
+    void print_components(std::ostream& os = std::cout) const;
+    void print_MNA_system(std::ostream& os = std::cout) const;
+    virtual void print(std::ostream& os = std::cout) const override;
     ~Circuit();
 };
 

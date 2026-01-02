@@ -91,7 +91,7 @@ bool test_simple_resistor_divider() {
     circuit.assemble_MNA_system();
     
     std::ostringstream oss;
-    circuit.display_MNA_system(oss);
+    circuit.print_MNA_system(oss);
     std::string output = oss.str();
     
     auto matrix = parse_mna_matrix(output);
@@ -121,7 +121,7 @@ bool test_current_source_circuit() {
     circuit.assemble_MNA_system();
     
     std::ostringstream oss;
-    circuit.display_MNA_system(oss);
+    circuit.print_MNA_system(oss);
     std::string output = oss.str();
     
     auto matrix = parse_mna_matrix(output);
@@ -145,7 +145,7 @@ bool test_multiple_voltage_sources() {
     circuit.assemble_MNA_system();
     
     std::ostringstream oss;
-    circuit.display_MNA_system(oss);
+    circuit.print_MNA_system(oss);
     std::string output = oss.str();
     
     auto matrix = parse_mna_matrix(output);
@@ -173,7 +173,7 @@ bool test_parallel_resistors() {
     circuit.assemble_MNA_system();
     
     std::ostringstream oss;
-    circuit.display_MNA_system(oss);
+    circuit.print_MNA_system(oss);
     std::string output = oss.str();
     
     auto matrix = parse_mna_matrix(output);
@@ -193,7 +193,7 @@ bool test_series_resistors() {
     circuit.assemble_MNA_system();
     
     std::ostringstream oss;
-    circuit.display_MNA_system(oss);
+    circuit.print_MNA_system(oss);
     std::string output = oss.str();
     
     auto matrix = parse_mna_matrix(output);
@@ -215,7 +215,7 @@ bool test_ground_node_excluded() {
     circuit.assemble_MNA_system();
     
     std::ostringstream oss;
-    circuit.display_MNA_system(oss);
+    circuit.print_MNA_system(oss);
     std::string output = oss.str();
     
     auto matrix = parse_mna_matrix(output);
@@ -239,7 +239,7 @@ bool test_wheatstone_bridge() {
     circuit.assemble_MNA_system();
     
     std::ostringstream oss;
-    circuit.display_MNA_system(oss);
+    circuit.print_MNA_system(oss);
     std::string output = oss.str();
     
     auto matrix = parse_mna_matrix(output);
@@ -259,13 +259,13 @@ bool test_wheatstone_bridge() {
 }
 
 bool test_display_output() {
-    // Test that display_MNA_system produces output without crashing
+    // Test that print_MNA_system produces output without crashing
     Circuit circuit;
     circuit.parse_netlist("tests/test_netlists/voltage_divider.net");
     circuit.assemble_MNA_system();
     
     std::ostringstream oss;
-    circuit.display_MNA_system(oss);
+    circuit.print_MNA_system(oss);
     
     std::string output = oss.str();
     
@@ -324,7 +324,7 @@ bool test_performance_large_circuit() {
     
     // Verify correctness: check that matrix was actually assembled
     std::ostringstream oss;
-    circuit.display_MNA_system(oss);
+    circuit.print_MNA_system(oss);
     std::string output = oss.str();
     
     auto matrix = parse_mna_matrix(output);

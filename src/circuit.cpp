@@ -94,30 +94,37 @@ void Circuit::parse_netlist(const std::string& filename) {
     }
 }
 
-void Circuit::print(std::ostream& os) const {
-    os << std::string(40, '=') << std::endl;
-    os << "Circuit Name: " << circuit_name << std::endl;
-    os << std::string(40, '=') << std::endl;
-
-    os << "\nCircuit Nodes:" << std::endl;
+void Circuit::print_nodes(std::ostream& os) const {
+    os << "Circuit Nodes:" << std::endl;
     os << std::string(40, '-') << std::endl;
     os << "Node(ID)"<< std::setw(16) <<"Voltage" << std::endl;
     os << std::string(40, '-') << std::endl;
-
     for (const auto& pair : nodes)
         os << *(pair.second) << std::endl;
-    
     os << std::endl;
+}
+
+void Circuit::print_components(std::ostream& os) const {
     os << "Circuit Components:" << std::endl;
     os << std::string(40, '-') << std::endl;
     os << "T(ID)" << std::setw(7) << "(+)" << std::setw(6) << "(-)" << std::right << std::setw(16) << "Value" << " Unit" << std::endl;
     os << std::string(40, '-') << std::endl;
-
     for (const auto& pair : components) 
         os << *(pair.second);
+    os << std::endl;
+}
+
+void Circuit::print(std::ostream& os) const {
+    os << std::string(40, '=') << std::endl;
+    os << "Circuit Name: " << circuit_name << std::endl;
+    os << std::string(40, '=') << std::endl << std::endl;
+
+    print_nodes(os);
     
+    print_components(os);
+
     if(mna_matrix.size() > 0)
-        display_MNA_system(os);
+        print_MNA_system(os);
 }
 
 void Circuit::assemble_MNA_system() {
@@ -131,7 +138,7 @@ void Circuit::assemble_MNA_system() {
     }
 }
 
-void Circuit::display_MNA_system(std::ostream& os) const {
+void Circuit::print_MNA_system(std::ostream& os) const {
     // Collect all variables
     std::set<std::string> all_vars;
     for(const auto& entry : mna_matrix) {

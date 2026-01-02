@@ -7,5 +7,4 @@ Timer::~Timer() {
     auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
     cout << "\nExecution time: " << duration.count() << " microseconds (" 
          << duration.count() / 1000.0 << " ms)" << endl;
-    system("pause");
 }
