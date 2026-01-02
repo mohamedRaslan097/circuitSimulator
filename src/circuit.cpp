@@ -27,6 +27,8 @@ void Circuit::add_resistor(std::string& resistorId, std::string& node1, std::str
     if(components.find(resistorId) == components.end()) {
         Resistor* resistor = new Resistor(resistorId, nodes[node1], nodes[node2], resistance);
         components[resistorId] = resistor;
+    } else {
+        throw std::runtime_error("Resistor with ID " + resistorId + " already exists in the circuit.");
     }
 }
 
@@ -35,6 +37,8 @@ void Circuit::add_voltage_source(std::string& voltageSourceId, std::string& node
         Voltage_source* voltageSource = new Voltage_source(voltageSourceId, nodes[node1], nodes[node2], voltage);
         components[voltageSourceId] = voltageSource;
         extra_variables++;
+    } else {
+        throw std::runtime_error("Voltage source with ID " + voltageSourceId + " already exists in the circuit.");
     }
 }
 
@@ -42,6 +46,8 @@ void Circuit::add_current_source(std::string& currentSourceId, std::string& node
     if(components.find(currentSourceId) == components.end()) {
         Current_source* currentSource = new Current_source(currentSourceId, nodes[node1], nodes[node2], current);
         components[currentSourceId] = currentSource;
+    } else {
+        throw std::runtime_error("Current source with ID " + currentSourceId + " already exists in the circuit.");
     }
 }
 
@@ -97,17 +103,19 @@ void Circuit::print(std::ostream& os) const {
     os << std::string(40, '-') << std::endl;
     os << "Node(ID)"<< std::setw(16) <<"Voltage" << std::endl;
     os << std::string(40, '-') << std::endl;
-    for (const auto& pair : nodes) {
+
+    for (const auto& pair : nodes)
         os << *(pair.second) << std::endl;
-    }
+    
     os << std::endl;
     os << "Circuit Components:" << std::endl;
     os << std::string(40, '-') << std::endl;
     os << "T(ID)" << std::setw(7) << "(+)" << std::setw(6) << "(-)" << std::right << std::setw(16) << "Value" << " Unit" << std::endl;
     os << std::string(40, '-') << std::endl;
-    for (const auto& pair : components) {
+
+    for (const auto& pair : components) 
         os << *(pair.second);
-    }
+    
     if(mna_matrix.size() > 0)
         display_MNA_system(os);
 }
@@ -116,12 +124,10 @@ void Circuit::assemble_MNA_system() {
     mna_matrix.clear();
     for(const auto& component : components) {
         Component_contribution contrib = component.second->get_contribution();
-        for(const auto& mc : contrib.matrixStamps) {
+        for(const auto& mc : contrib.matrixStamps) 
             mna_matrix[{mc.row, mc.col}] += mc.value;
-        }
-        for(const auto& vc : contrib.vectorStamps) {
+        for(const auto& vc : contrib.vectorStamps) 
             mna_vector[vc.row] += vc.value;
-        }
     }
 }
 
