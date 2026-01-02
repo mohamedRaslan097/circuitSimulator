@@ -16,3 +16,19 @@ void Voltage_source::print(std::ostream& os) const {
        << std::setw(6) << nj->id 
        << std::right << std::fixed << std::setprecision(4) << std::setw(12) << voltage << " V" << std::endl;
 }
+
+Component_contribution Voltage_source::get_contribution(){
+    Component_contribution contribution;
+    std::string vc_id = "I" + componentId;
+    if(ni->id != "0"){
+        contribution.stampMatrix(ni->id, vc_id, 1.0);
+        contribution.stampMatrix(vc_id, ni->id, 1.0);
+        contribution.stampVector(ni->id, -voltage);
+    }
+    if(nj->id != "0"){
+        contribution.stampMatrix(nj->id, vc_id, 1.0);
+        contribution.stampMatrix(vc_id, nj->id, -1.0);
+        contribution.stampVector(nj->id, voltage);
+    }
+    return contribution;
+}

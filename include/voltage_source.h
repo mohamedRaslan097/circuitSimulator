@@ -16,7 +16,8 @@ public:
     Voltage_source(Node* ni, Node* nj, double v);
     virtual double get_voltage_drop() override;
     virtual double get_current() override;
-    virtual void print(std::ostream& os) const override;
+    virtual Component_contribution get_contribution() override;
+    virtual void print(std::ostream& os = std::cout) const override;
 };
 
 #endif

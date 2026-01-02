@@ -20,3 +20,14 @@ void Current_source::print(std::ostream& os) const {
        << std::setw(6) << nj->id 
        << std::right << std::fixed << std::setprecision(4) << std::setw(12) << current << " A" << std::endl;
 }
+
+Component_contribution Current_source::get_contribution(){
+    Component_contribution contribution;
+    if(ni->id != "0"){
+        contribution.stampVector(ni->id, -current);
+    }
+    if(nj->id != "0"){
+        contribution.stampVector(nj->id, current);
+    }
+    return contribution;
+}

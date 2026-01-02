@@ -9,7 +9,7 @@
 class I_Printable {
 public:
     friend std::ostream& operator<<(std::ostream& os, const I_Printable& obj);
-    virtual void print(std::ostream& os) const = 0;
+    virtual void print(std::ostream& os = std::cout) const = 0;
     virtual ~I_Printable() = default;
 };
 

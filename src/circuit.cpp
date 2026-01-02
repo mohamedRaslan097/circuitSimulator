@@ -1,5 +1,5 @@
 #include "circuit.h"
-
+#include <set>
 Circuit::Circuit(std::string name) : circuit_name(name) {
     nodes.clear();
     components.clear();
@@ -34,6 +34,7 @@ void Circuit::add_voltage_source(std::string& voltageSourceId, std::string& node
     if(components.find(voltageSourceId) == components.end()) {
         Voltage_source* voltageSource = new Voltage_source(voltageSourceId, nodes[node1], nodes[node2], voltage);
         components[voltageSourceId] = voltageSource;
+        extra_variables++;
     }
 }
 
@@ -102,9 +103,79 @@ void Circuit::print(std::ostream& os) const {
     os << std::endl;
     os << "Circuit Components:" << std::endl;
     os << std::string(40, '-') << std::endl;
-    os << "T(ID)" << std::setw(7) << "(-)" << std::setw(6) << "(+)" << std::right << std::setw(16) << "Value" << " Unit" << std::endl;
+    os << "T(ID)" << std::setw(7) << "(+)" << std::setw(6) << "(-)" << std::right << std::setw(16) << "Value" << " Unit" << std::endl;
     os << std::string(40, '-') << std::endl;
     for (const auto& pair : components) {
         os << *(pair.second);
+    }
+    if(mna_matrix.size() > 0)
+        display_MNA_system(os);
+}
+
+void Circuit::assemble_MNA_system() {
+    mna_matrix.clear();
+    for(const auto& component : components) {
+        Component_contribution contrib = component.second->get_contribution();
+        for(const auto& mc : contrib.matrixStamps) {
+            mna_matrix[{mc.row, mc.col}] += mc.value;
+        }
+        for(const auto& vc : contrib.vectorStamps) {
+            mna_vector[vc.row] += vc.value;
+        }
+    }
+}
+
+void Circuit::display_MNA_system(std::ostream& os) const {
+    // Collect all variables
+    std::set<std::string> all_vars;
+    for(const auto& entry : mna_matrix) {
+        if(entry.first.first != "0") all_vars.insert(entry.first.first);
+        if(entry.first.second != "0") all_vars.insert(entry.first.second);
+    }
+    for(const auto& entry : mna_vector) {
+        if(entry.first != "0") all_vars.insert(entry.first);
+    }
+    
+    std::vector<std::string> vars(all_vars.begin(), all_vars.end());
+    
+    // Print MNA system in Matrix form
+    os << "\nCircuit MNA System:" << std::endl;
+    os << std::string(40, '-') << std::endl;
+
+    // Print header row
+    os << std::setw(6) << " ";
+    for(const auto& col : vars) {
+        os << std::setw(10) << col << " ";
+    }
+    os << std::setw(5) << "|" << std::setw(10) << "RHS" << std::endl;
+    
+    // Print each row
+    for(const auto& row : vars) {
+        os << std::setw(4) << row << "  [ ";
+        for(const auto& col : vars) {
+            double value = 0.0;
+            auto it = mna_matrix.find({row, col});
+            if(it != mna_matrix.end()) {
+                value = it->second;
+            }
+            os << std::setw(10) << value << " ";
+        }
+        double vec_value = 0.0;
+        auto it_vec = mna_vector.find(row);
+        if(it_vec != mna_vector.end()) {
+            vec_value = it_vec->second;
+        }
+        os << "]   [ " << std::setw(10) << vec_value << " ]" << std::endl;
+    }
+    
+    // Print extra variables info after the matrix
+    if(extra_variables > 0) {
+        os << "\nExtra variables (" << extra_variables << "): ";
+        // Print last extra_variables variables from the vars list
+        for(size_t i = vars.size() - extra_variables; i < vars.size(); i++) {
+            if(i > vars.size() - extra_variables) os << ", ";
+            os << vars[i];
+        }
+        os << std::endl;
     }
 }

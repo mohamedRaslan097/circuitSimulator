@@ -14,7 +14,7 @@ public:
     Node(std::string nodeId);
     bool operator==(const Node& other) const;
     bool operator<(const Node& other) const;
-    virtual void print(std::ostream& os) const override;
+    virtual void print(std::ostream& os = std::cout) const override;
 };
 
 #endif

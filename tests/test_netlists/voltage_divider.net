@@ -1,0 +1,4 @@
+* Simple Voltage Divider
+V1 1 0 10.0
+R1 1 2 1000
+R2 2 0 1000

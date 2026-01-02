@@ -3,6 +3,7 @@
 
 #include "I_printable.h"
 #include "node.h"
+#include "component_contribution.h"
 
 class Component : public I_Printable {
 protected:
@@ -15,6 +16,7 @@ public:
     Component(Component&& src);
     virtual double get_voltage_drop() = 0;
     virtual double get_current() = 0;
+    virtual Component_contribution get_contribution() = 0;
     ~Component();
 };
 

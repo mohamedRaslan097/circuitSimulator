@@ -1,0 +1,4 @@
+* Series Resistors
+V1 1 0 10.0
+R1 1 2 500
+R2 2 0 500

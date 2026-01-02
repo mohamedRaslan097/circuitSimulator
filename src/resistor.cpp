@@ -23,3 +23,17 @@ void Resistor::print(std::ostream& os) const {
        << std::setw(6) << nj->id 
        << std::right << std::fixed << std::setprecision(4) << std::setw(12) << resistance << " Ohms" << std::endl;
 }
+
+Component_contribution Resistor::get_contribution(){
+    Component_contribution contribution;
+    double conductance = 1.0 / resistance;
+    
+    contribution.stampMatrix(ni->id, ni->id, conductance);
+    if (ni->id != "0" && nj->id != "0")
+    {
+        contribution.stampMatrix(nj->id, nj->id, conductance);
+        contribution.stampMatrix(ni->id, nj->id, -conductance);
+        contribution.stampMatrix(nj->id, ni->id, -conductance);
+    }
+    return contribution;
+}

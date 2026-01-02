@@ -1,0 +1,4 @@
+* Parallel Resistors
+V1 1 0 10.0
+R1 1 0 1000
+R2 1 0 1000
