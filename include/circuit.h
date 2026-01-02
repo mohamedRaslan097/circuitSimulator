@@ -9,9 +9,13 @@
 class Circuit : public I_Printable {
 protected:
     std::map<std::string, Node*> nodes;
+    std::unordered_map<std::string, int> nodes_index_map;
+
     std::map<std::string, Component*> components;
-    std::map<std::pair<std::string,std::string>, double> mna_matrix;
-    std::map<std::string, double> mna_vector;
+
+    std::map<int, std::map<int, double>> mna_matrix;
+    std::map<int, double> mna_vector;
+    
     std::string circuit_name;
     int extra_variables = 0;
     
@@ -23,10 +27,14 @@ public:
     Circuit(std::string name="Circuit");
     void parse_netlist(const std::string& filename);
     void assemble_MNA_system();
+
     void print_nodes(std::ostream& os = std::cout) const;
     void print_components(std::ostream& os = std::cout) const;
     void print_MNA_system(std::ostream& os = std::cout) const;
     virtual void print(std::ostream& os = std::cout) const override;
+    
+    const std::map<int, std::map<int, double>>& get_MNA_matrix() const { return mna_matrix; }
+    const std::map<int, double>& get_MNA_vector() const { return mna_vector; }
     ~Circuit();
 };
 

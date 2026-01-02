@@ -20,10 +20,14 @@ void Circuit::add_node(std::string& nodeId) {
     if (nodes.find(nodeId) == nodes.end()) {
         Node* newNode = new Node(nodeId);
         nodes[nodeId] = newNode;
+        nodes_index_map[nodeId] = nodes_index_map.size();
     }
 }
 
 void Circuit::add_resistor(std::string& resistorId, std::string& node1, std::string& node2, double resistance) {
+    if (resistance < 0)
+        throw std::runtime_error("Resistor with ID " + resistorId + " has negative resistance.");
+    
     if(components.find(resistorId) == components.end()) {
         Resistor* resistor = new Resistor(resistorId, nodes[node1], nodes[node2], resistance);
         components[resistorId] = resistor;
@@ -36,6 +40,7 @@ void Circuit::add_voltage_source(std::string& voltageSourceId, std::string& node
     if(components.find(voltageSourceId) == components.end()) {
         Voltage_source* voltageSource = new Voltage_source(voltageSourceId, nodes[node1], nodes[node2], voltage);
         components[voltageSourceId] = voltageSource;
+        nodes_index_map["I" + voltageSourceId] = nodes_index_map.size();
         extra_variables++;
     } else {
         throw std::runtime_error("Voltage source with ID " + voltageSourceId + " already exists in the circuit.");
@@ -131,22 +136,26 @@ void Circuit::assemble_MNA_system() {
     mna_matrix.clear();
     for(const auto& component : components) {
         Component_contribution contrib = component.second->get_contribution();
-        for(const auto& mc : contrib.matrixStamps) 
-            mna_matrix[{mc.row, mc.col}] += mc.value;
-        for(const auto& vc : contrib.vectorStamps) 
-            mna_vector[vc.row] += vc.value;
+
+        for(const auto& mc : contrib.matrixStamps){
+            auto row_idx = nodes_index_map.at(mc.row);
+            auto col_idx = nodes_index_map.at(mc.col);
+            mna_matrix[row_idx][col_idx] += mc.value;
+        }
+        
+        for(const auto& vc : contrib.vectorStamps) {
+            auto row_idx = nodes_index_map.at(vc.row);
+            mna_vector[row_idx] += vc.value;
+        }
     }
 }
 
 void Circuit::print_MNA_system(std::ostream& os) const {
     // Collect all variables
     std::set<std::string> all_vars;
-    for(const auto& entry : mna_matrix) {
-        if(entry.first.first != "0") all_vars.insert(entry.first.first);
-        if(entry.first.second != "0") all_vars.insert(entry.first.second);
-    }
-    for(const auto& entry : mna_vector) {
-        if(entry.first != "0") all_vars.insert(entry.first);
+    for (const auto& pair : nodes_index_map) {
+        if(pair.first != "0") // Exclude ground node
+            all_vars.insert(pair.first);
     }
     
     std::vector<std::string> vars(all_vars.begin(), all_vars.end());
@@ -164,21 +173,27 @@ void Circuit::print_MNA_system(std::ostream& os) const {
     
     // Print each row
     for(const auto& row : vars) {
+        auto row_idx = nodes_index_map.at(row);
+        auto row_it = mna_matrix.at(row_idx);
+
         os << std::setw(4) << row << "  [ ";
-        for(const auto& col : vars) {
+
+        for (const auto&col : vars) {
             double value = 0.0;
-            auto it = mna_matrix.find({row, col});
-            if(it != mna_matrix.end()) {
-                value = it->second;
+            auto col_idx = nodes_index_map.at(col);
+            auto col_it = row_it.find(col_idx);
+            if(col_it != row_it.end()) {
+                value = col_it->second;
             }
             os << std::setw(10) << value << " ";
         }
+
         double vec_value = 0.0;
-        auto it_vec = mna_vector.find(row);
+        auto it_vec = mna_vector.find(row_idx);
         if(it_vec != mna_vector.end()) {
             vec_value = it_vec->second;
         }
-        os << "]   [ " << std::setw(10) << vec_value << " ]" << std::endl;
+        os << "|   [ " << std::setw(10) << vec_value << " ]" << std::endl;
     }
     
     // Print extra variables info after the matrix
