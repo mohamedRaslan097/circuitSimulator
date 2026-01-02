@@ -1,4 +1,26 @@
-# Circuit Simulator Project - Development Timeline & Phases
+# Circuit Simulator
+
+A high-performance circuit simulation tool.
+
+## 📦 Current Version
+
+**Release: v1.0.0 - Phase 1 Complete**  
+*MNA System Assembly*
+
+---
+
+## 📁 Project Structure
+
+```
+circuitSimulator/
+├── include/              # Header files
+├── src/                  # Implementation files
+├── main/                 # Main application
+├── tests/                # Test suites
+└── build/                # Compiled executables
+```
+
+---
 
 ## 🚀 Quick Start
 
@@ -10,31 +32,45 @@
 
 **Compile the main program:**
 ```bash
-g++ -fdiagnostics-color=always -g -Wall -std=c++17 -I./include src/*.cpp main/main.cpp -o build/debug/main.exe
+# Build main program
+g++ -std=c++17 -Wall -g -I./include src/*.cpp main/main.cpp -o build/debug/main.exe
+
+# Build tests
+g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_components.cpp -o build/debug/test_components.exe
+g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_netlist_parsing.cpp -o build/debug/test_netlist_parsing.exe
+g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_mna_assembly.cpp -o build/debug/test_mna_assembly.exe
 ```
 
-**Compile component tests:**
+### Running the Simulator
+
 ```bash
-g++ -fdiagnostics-color=always -g -Wall -std=c++17 -I./include src/*.cpp tests/test_components.cpp -o build/debug/test_components.exe
+# Basic usage
+./build/debug/main.exe -i netlist.txt
+
+# With output file
+./build/debug/main.exe -i circuit.net -o results.txt
+
+# Verbose mode (print to console)
+./build/debug/main.exe -i circuit.net -o results.txt -v
+
+# Show help
+./build/debug/main.exe -h
 ```
 
-**Compile netlist parsing tests:**
-```bash
-g++ -fdiagnostics-color=always -g -Wall -std=c++17 -I./include src/*.cpp tests/test_netlist_parsing.cpp -o build/debug/test_netlist_parsing.exe
-```
+#### Command-Line Options
+- `-i <file>` - Input netlist file (required)
+- `-o <file>` - Output results file (default: output.log)
+- `-v` - Verbose mode (display results to console)
+- `-p` - Pause before exit (keep console open)
+- `-h` - Show help message
 
-### Running the Program
-
-**Run the simulator:**
-```bash
-./build/debug/main.exe
-```
-The program expects a `netlist.txt` file in the root directory.
+### Running Tests
 
 **Run tests:**
 ```bash
 ./build/debug/test_components.exe
 ./build/debug/test_netlist_parsing.exe
+./build/debug/test_mna_assembly.exe
 ```
 
 ### Netlist Format
@@ -56,6 +92,50 @@ R3 1 3 1000
 R4 3 0 1000
 R5 2 3 100
 ```
+
+## ✨ Implemented Features (Phase 1)
+
+### Core Components
+- ✅ **Resistors** - Linear resistive elements
+- ✅ **Voltage Sources** - Independent DC voltage sources
+- ✅ **Current Sources** - Independent DC current sources
+```
+╔══════════════════════════════════════════════════════╗
+║           PHASE 1 COMPONENT QUICK REFERENCE          ║
+╠══════════════════════════════════════════════════════╣
+║  RESISTOR                                            ║
+║  ────────                                            ║
+║  Syntax:  R<name> <n+> <n-> <value>                  ║
+║  Example: R1 1 0 1000                                ║
+║  Units:     (ohms)                                   ║
+║  Range:   R > 0                                      ║
+║                                                      ║
+║  VOLTAGE SOURCE                                      ║
+║  ──────────────                                      ║
+║  Syntax:  V<name> <n+> <n-> <DC_value>               ║
+║  Example: VCC 1 0 5                                  ║
+║  Units:   V (volts)                                  ║
+║  Range:   Any real number                            ║
+║                                                      ║
+║  CURRENT SOURCE                                      ║
+║  ──────────────                                      ║
+║  Syntax:  I<name> <n+> <n-> <DC_value>               ║
+║  Example: I1 0 1 1                                   ║
+║  Units:   A (amperes)                                ║
+║  Range:   Any real number                            ║
+╚══════════════════════════════════════════════════════╝
+```
+
+### Netlist Parsing
+- ✅ **SPICE-like Format** - Industry-standard syntax
+
+### Circuit Analysis
+- ✅ **Modified Nodal Analysis (MNA)** - Efficient matrix assembly
+
+### User Interface
+- ✅ **Command-Line Interface** - Flexible argument parsing
+
+---
 
 ## 📋 Phase 1: Foundation & Core Architecture ✅
 ### Objectives:
