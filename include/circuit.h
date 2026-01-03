@@ -9,15 +9,15 @@
 class Circuit : public I_Printable {
 protected:
     std::map<std::string, Node*> nodes;
-    std::unordered_map<std::string, int> nodes_index_map;
+    std::map<int,std::string> nodeId_map;
 
     std::map<std::string, Component*> components;
+    std::map<int,std::string> extraVarId_map;
 
     std::map<int, std::map<int, double>> mna_matrix;
     std::map<int, double> mna_vector;
     
     std::string circuit_name;
-    int extra_variables = 0;
     
     void add_node(std::string& nodeId);
     void add_resistor(std::string& resistorId, std::string& node1, std::string& node2, double resistance);

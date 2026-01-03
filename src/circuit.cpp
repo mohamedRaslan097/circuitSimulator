@@ -4,7 +4,7 @@ Circuit::Circuit(std::string name) : circuit_name(name) {
     nodes.clear();
     components.clear();
     Node* ground = new Node("0");
-    nodes[ground->id] = ground;
+    nodes[ground->name] = ground;
 }
 
 Circuit::~Circuit() {
@@ -20,7 +20,7 @@ void Circuit::add_node(std::string& nodeId) {
     if (nodes.find(nodeId) == nodes.end()) {
         Node* newNode = new Node(nodeId);
         nodes[nodeId] = newNode;
-        nodes_index_map[nodeId] = nodes_index_map.size();
+        nodeId_map[newNode->id] = newNode->name;
     }
 }
 
@@ -40,8 +40,7 @@ void Circuit::add_voltage_source(std::string& voltageSourceId, std::string& node
     if(components.find(voltageSourceId) == components.end()) {
         Voltage_source* voltageSource = new Voltage_source(voltageSourceId, nodes[node1], nodes[node2], voltage);
         components[voltageSourceId] = voltageSource;
-        nodes_index_map["I" + voltageSourceId] = nodes_index_map.size();
-        extra_variables++;
+        extraVarId_map[voltageSource->get_vc_id()] = Voltage_source::stamping_id + voltageSourceId;
     } else {
         throw std::runtime_error("Voltage source with ID " + voltageSourceId + " already exists in the circuit.");
     }
@@ -137,28 +136,17 @@ void Circuit::assemble_MNA_system() {
     for(const auto& component : components) {
         Component_contribution contrib = component.second->get_contribution();
 
-        for(const auto& mc : contrib.matrixStamps){
-            auto row_idx = nodes_index_map.at(mc.row);
-            auto col_idx = nodes_index_map.at(mc.col);
-            mna_matrix[row_idx][col_idx] += mc.value;
-        }
+        for(const auto& mc : contrib.matrixStamps)
+            mna_matrix[mc.row][mc.col] += mc.value;
         
-        for(const auto& vc : contrib.vectorStamps) {
-            auto row_idx = nodes_index_map.at(vc.row);
-            mna_vector[row_idx] += vc.value;
-        }
+        for(const auto& vc : contrib.vectorStamps)
+            mna_vector[vc.row] += vc.value;
     }
 }
 
 void Circuit::print_MNA_system(std::ostream& os) const {
-    // Collect all variables
-    std::set<std::string> all_vars;
-    for (const auto& pair : nodes_index_map) {
-        if(pair.first != "0") // Exclude ground node
-            all_vars.insert(pair.first);
-    }
-    
-    std::vector<std::string> vars(all_vars.begin(), all_vars.end());
+    // Array of pointers to iterate both maps without merging
+    const std::map<int, std::string>* var_maps[] = {&nodeId_map, &extraVarId_map};
     
     // Print MNA system in Matrix form
     os << "\nCircuit MNA System:" << std::endl;
@@ -166,43 +154,49 @@ void Circuit::print_MNA_system(std::ostream& os) const {
 
     // Print header row
     os << std::setw(6) << " ";
-    for(const auto& col : vars) {
-        os << std::setw(10) << col << " ";
+    for(const auto* map : var_maps) {
+        for(const auto& var : *map) {
+            os << std::setw(10) << var.second << " ";
+        }
     }
     os << std::setw(5) << "|" << std::setw(10) << "RHS" << std::endl;
     
     // Print each row
-    for(const auto& row : vars) {
-        auto row_idx = nodes_index_map.at(row);
-        auto row_it = mna_matrix.at(row_idx);
+    for(const auto* row_map : var_maps) {
+        for(const auto& row : *row_map) {
+            auto row_idx = row.first;
+            auto row_it = mna_matrix.find(row_idx);
 
-        os << std::setw(4) << row << "  [ ";
+            os << std::setw(4) << row.second << "  [ ";
 
-        for (const auto&col : vars) {
-            double value = 0.0;
-            auto col_idx = nodes_index_map.at(col);
-            auto col_it = row_it.find(col_idx);
-            if(col_it != row_it.end()) {
-                value = col_it->second;
+            // Print all columns
+            for(const auto* col_map : var_maps) {
+                for(const auto& col : *col_map) {
+                    double value = 0.0;
+                    if(row_it != mna_matrix.end()) {
+                        auto col_it = row_it->second.find(col.first);
+                        if(col_it != row_it->second.end()) {
+                            value = col_it->second;
+                        }
+                    }
+                    os << std::setw(10) << value << " ";
+                }
             }
-            os << std::setw(10) << value << " ";
-        }
 
-        double vec_value = 0.0;
-        auto it_vec = mna_vector.find(row_idx);
-        if(it_vec != mna_vector.end()) {
-            vec_value = it_vec->second;
+            double vec_value = 0.0;
+            auto it_vec = mna_vector.find(row_idx);
+            if(it_vec != mna_vector.end()) {
+                vec_value = it_vec->second;
+            }
+            os << "|   [ " << std::setw(10) << vec_value << " ]" << std::endl;
         }
-        os << "|   [ " << std::setw(10) << vec_value << " ]" << std::endl;
     }
     
     // Print extra variables info after the matrix
-    if(extra_variables > 0) {
-        os << "\nExtra variables (" << extra_variables << "): ";
-        // Print last extra_variables variables from the vars list
-        for(size_t i = vars.size() - extra_variables; i < vars.size(); i++) {
-            if(i > vars.size() - extra_variables) os << ", ";
-            os << vars[i];
+    if(extraVarId_map.size() > 0) {
+        os << "\nExtra variables (" << extraVarId_map.size() << "): ";
+        for(const auto& extra_var : extraVarId_map) {
+            os << extra_var.second << " ";
         }
         os << std::endl;
     }

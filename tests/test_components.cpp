@@ -61,8 +61,8 @@ void test_node_creation() {
     Node n2("VCC");
     n2.voltage = 5.0;
     
-    assert(n1.id == "GND");
-    assert(n2.id == "VCC");
+    assert(n1.name == "GND");
+    assert(n2.name == "VCC");
     assert(n1.voltage == 0.0);
     assert(n2.voltage == 5.0);
     

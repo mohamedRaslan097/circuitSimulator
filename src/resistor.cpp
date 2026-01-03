@@ -19,8 +19,8 @@ double Resistor::get_current(){
 
 void Resistor::print(std::ostream& os) const {
     os << std::left << std::setw(10) << "R(" + componentId + ")"
-       << std::setw(6) << ni->id 
-       << std::setw(6) << nj->id 
+       << std::setw(6) << ni->name 
+       << std::setw(6) << nj->name 
        << std::right << std::fixed << std::setprecision(4) << std::setw(12) << resistance << " Ohms" << std::endl;
 }
 
@@ -29,7 +29,7 @@ Component_contribution Resistor::get_contribution(){
     double conductance = 1.0 / resistance;
     
     contribution.stampMatrix(ni->id, ni->id, conductance);
-    if (ni->id != "0" && nj->id != "0")
+    if (ni->id != 0 && nj->id != 0)
     {
         contribution.stampMatrix(nj->id, nj->id, conductance);
         contribution.stampMatrix(ni->id, nj->id, -conductance);

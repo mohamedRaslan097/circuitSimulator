@@ -1,14 +1,14 @@
 #include "component_contribution.h"
 
-MatrixContribution::MatrixContribution(std::string r, std::string c, double v) : row(r), col(c), value(v) {}
+MatrixContribution::MatrixContribution(int r, int c, double v) : row(r), col(c), value(v) {}
 
-VectorContribution::VectorContribution(std::string r, double v) : row(r), value(v) {}
+VectorContribution::VectorContribution(int r, double v) : row(r), value(v) {}
 
-void Component_contribution::stampMatrix(std::string row, std::string col, double value) {
+void Component_contribution::stampMatrix(int row, int col, double value) {
     matrixStamps.emplace_back(row, col, value);
 }
 
-void Component_contribution::stampVector(std::string row, double value) {
+void Component_contribution::stampVector(int row, double value) {
     vectorStamps.emplace_back(row, value);
 }
 

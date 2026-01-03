@@ -235,7 +235,7 @@ bool test_ground_node_excluded() {
 bool test_wheatstone_bridge() {
     // Full Wheatstone bridge circuit from netlist
     Circuit circuit;
-    circuit.parse_netlist("main/netlist.txt");
+    circuit.parse_netlist("tests/test_netlists/netlist.txt");
     circuit.assemble_MNA_system();
     
     std::ostringstream oss;

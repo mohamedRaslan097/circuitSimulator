@@ -16,17 +16,17 @@ double Current_source::get_current() {return current;}
 
 void Current_source::print(std::ostream& os) const {
     os << std::left << std::setw(10) << "I(" + componentId + ")"
-       << std::setw(6) << ni->id 
-       << std::setw(6) << nj->id 
+       << std::setw(6) << ni->name 
+       << std::setw(6) << nj->name 
        << std::right << std::fixed << std::setprecision(4) << std::setw(12) << current << " A" << std::endl;
 }
 
 Component_contribution Current_source::get_contribution(){
     Component_contribution contribution;
-    if(ni->id != "0"){
+    if(ni->id != 0){
         contribution.stampVector(ni->id, -current);
     }
-    if(nj->id != "0"){
+    if(nj->id != 0){
         contribution.stampVector(nj->id, current);
     }
     return contribution;

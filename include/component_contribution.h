@@ -5,16 +5,16 @@
 #include <vector>
 
 struct MatrixContribution {
-    std::string row;
-    std::string col;
+    int row;
+    int col;
     double value;
-    MatrixContribution(std::string r, std::string c, double v);
+    MatrixContribution(int r, int c, double v);
 };
 
 struct VectorContribution {
-    std::string row;
+    int row;
     double value;
-    VectorContribution(std::string r, double v);
+    VectorContribution(int r, double v);
 };
 
 class Component_contribution : public I_Printable {
@@ -22,8 +22,8 @@ public:
     std::vector<MatrixContribution> matrixStamps;
     std::vector<VectorContribution> vectorStamps;
     
-    void stampMatrix(std::string row, std::string col, double value);
-    void stampVector(std::string row, double value);
+    void stampMatrix(int row, int col, double value);
+    void stampVector(int row, double value);
     virtual void print(std::ostream& os = std::cout) const override;
 };
 

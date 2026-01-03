@@ -7,8 +7,10 @@
 
 class Node : public I_Printable {
 public:
-    std::string id;
+    std::string name;
+    int id;
     double voltage;
+    static int node_count;
     static bool valid;
 
     Node(std::string nodeId);
