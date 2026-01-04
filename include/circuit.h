@@ -27,20 +27,22 @@ protected:
     void add_current_source(std::string& currentSourceId, std::string& node1, std::string& node2, double current);
 public:
     Circuit(std::string name=default_name);
+    
     void parse_netlist(const std::string& filename);
     void assemble_MNA_system();
-
-    void print_nodes(std::ostream& os = std::cout) const;
-    void print_components(std::ostream& os = std::cout) const;
-    void print_MNA_system(std::ostream& os = std::cout) const;
-    virtual void print(std::ostream& os = std::cout) const override;
+    void deploy_solution(const std::vector<double>& solution);
     
     const std::map<int, std::map<int, double>>& get_MNA_matrix() const { return mna_matrix; }
     const std::map<int, double>& get_MNA_vector() const { return mna_vector; }
     const std::map<std::string, Node*>& get_nodes() const { return nodes; }
-
-    void deploy_solution(const std::vector<double>& solution);
+    
+    void print_nodes(std::ostream& os = std::cout) const;
+    void print_components(std::ostream& os = std::cout) const;
+    void print_MNA_system(std::ostream& os = std::cout) const;
+    void print_extraVars(std::ostream& os = std::cout) const;
     void print_solution(std::ostream& os = std::cout) const;
+    virtual void print(std::ostream& os = std::cout) const override;
+
     ~Circuit();
 };
 

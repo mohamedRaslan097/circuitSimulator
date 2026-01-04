@@ -118,7 +118,6 @@ void Circuit::print_components(std::ostream& os) const {
     os << std::string(40, '-') << std::endl;
     for (const auto& pair : components) 
         os << *(pair.second);
-    os << std::endl;
 }
 
 void Circuit::print(std::ostream& os) const {
@@ -126,12 +125,16 @@ void Circuit::print(std::ostream& os) const {
     os << "Circuit Name: " << circuit_name << std::endl;
     os << std::string(40, '=') << std::endl << std::endl;
 
-    print_nodes(os);
-    
     print_components(os);
 
     if(mna_matrix.size() > 0)
         print_MNA_system(os);
+
+    if(Node::valid)
+        print_solution(os);
+    else
+        print_nodes(os);
+    
 }
 
 void Circuit::assemble_MNA_system() {
@@ -206,11 +209,36 @@ void Circuit::print_MNA_system(std::ostream& os) const {
 }
 
 void Circuit::deploy_solution(const std::vector<double>& solution) {
-    // print solution vector
-    for(const auto& pair : nodeId_map) {
-        std::cout << "Node " << pair.second << " (" << pair.first << "): " << solution[pair.first] << " V" << std::endl;
+    for (size_t i = 1; i < solution.size(); i++)
+    {
+        if (nodeId_map.find(i) != nodeId_map.end()) {
+            std::string node_name = nodeId_map.at(i);
+            nodes[node_name]->voltage = solution[i];
+        } else if (extraVarId_map.find(i) != extraVarId_map.end()) {
+            std::string componednt_name = extraVarId_map.at(i).substr(1);
+            dynamic_cast<Voltage_source*>(components[componednt_name])->set_current(solution[i]);
+        }else {
+            throw std::runtime_error("Solution index " + std::to_string(i) + " does not correspond to any node or source.");
+        }
     }
-    for(const auto& pair : extraVarId_map) {
-        std::cout << "Extra Variable " << pair.second << " (" << pair.first << "): " << solution[pair.first]<< " A" << std::endl;
-    }
+    Node::valid = true;
+}
+
+void Circuit::print_extraVars(std::ostream& os) const {
+    os << "Circuit VS Currents:" << std::endl;
+    os << std::string(40, '-') << std::endl;
+    os << "I_VS(ID)"<< std::setw(16) <<"Current" << std::endl;
+    os << std::string(40, '-') << std::endl;
+    for (const auto& [id, component_name] : extraVarId_map)
+    os << std::left << std::setw(10) << "I_VS(" + component_name.substr(1) + ")"
+       << std::right << std::fixed << std::setprecision(6) << std::setw(14) 
+       << components.at(component_name.substr(1))->get_current() << " A"<< std::endl;
+}
+
+void Circuit::print_solution(std::ostream& os) const {
+    os << "\n╔════════════════════════════════════╗\n"
+       <<   "║   DC ANALYSIS RESULTS              ║\n"
+       <<   "╚════════════════════════════════════╝\n\n";
+    print_nodes(os);
+    print_extraVars(os);
 }

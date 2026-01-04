@@ -22,6 +22,7 @@ public:
     virtual Component_contribution get_contribution() override;
     virtual void print(std::ostream& os = std::cout) const override;
     int get_vc_id() const { return vc_id; }
+    void set_current(double i) { current = i; }
 };
 
 #endif

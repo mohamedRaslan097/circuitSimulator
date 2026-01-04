@@ -4,7 +4,6 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    Timer timer;
     
     // Parse command-line arguments
     UI ui;
@@ -12,14 +11,22 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
+    // Start timer
+    Timer timer;
+
     // Parse and assemble circuit
     Circuit circuit;
     circuit.parse_netlist(ui.get_input_file());
     circuit.assemble_MNA_system();
     
+    // Run simulation
+    Simulator simulator;
+    simulator.run_dc_analysis(circuit);
+    
     // Generate output
     stringstream ss;
     ss << circuit << endl;
+    ss << simulator << endl;
     string circuit_output = ss.str();
     
     // Output results
