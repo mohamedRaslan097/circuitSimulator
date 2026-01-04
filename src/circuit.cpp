@@ -61,11 +61,14 @@ void Circuit::parse_netlist(const std::string& filename) {
     if (!file.is_open()) {
         throw std::runtime_error("Could not open netlist file: " + filename);
     }
-    
-    std::string title;
-    getline(file,title);
-    
-    circuit_name = title[0] == '*' ? title.substr(2) : title;
+
+    std::streampos original_pos = file.tellg();
+    std::string first_line;
+    std::getline(file, first_line);
+    if(circuit_name == default_name && first_line[0] == '*') 
+        circuit_name = first_line.substr(2);
+    else
+        file.seekg(original_pos);
 
     std::string component_id;
     std::string node1_id;
@@ -188,7 +191,7 @@ void Circuit::print_MNA_system(std::ostream& os) const {
             if(it_vec != mna_vector.end()) {
                 vec_value = it_vec->second;
             }
-            os << "|   [ " << std::setw(10) << vec_value << " ]" << std::endl;
+            os << "]   [ " << std::setw(10) << vec_value << " ]" << std::endl;
         }
     }
     
@@ -199,5 +202,15 @@ void Circuit::print_MNA_system(std::ostream& os) const {
             os << extra_var.second << " ";
         }
         os << std::endl;
+    }
+}
+
+void Circuit::deploy_solution(const std::vector<double>& solution) {
+    // print solution vector
+    for(const auto& pair : nodeId_map) {
+        std::cout << "Node " << pair.second << " (" << pair.first << "): " << solution[pair.first] << " V" << std::endl;
+    }
+    for(const auto& pair : extraVarId_map) {
+        std::cout << "Extra Variable " << pair.second << " (" << pair.first << "): " << solution[pair.first]<< " A" << std::endl;
     }
 }

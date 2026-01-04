@@ -22,12 +22,11 @@ Component_contribution Voltage_source::get_contribution(){
     if(ni->id != 0){
         contribution.stampMatrix(ni->id, vc_id, 1.0);
         contribution.stampMatrix(vc_id, ni->id, 1.0);
-        contribution.stampVector(ni->id, -voltage);
     }
     if(nj->id != 0){
-        contribution.stampMatrix(nj->id, vc_id, 1.0);
+        contribution.stampMatrix(nj->id, vc_id, -1.0);
         contribution.stampMatrix(vc_id, nj->id, -1.0);
-        contribution.stampVector(nj->id, voltage);
     }
+    contribution.stampVector(vc_id, voltage);
     return contribution;
 }

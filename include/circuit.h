@@ -2,11 +2,13 @@
 #define CIRCUIT_H
 
 #include <map>
-#include <unordered_map>
-#include <vector>
-#include "Include.h"
+#include "Resistor.h"
+#include "voltage_source.h"
+#include "current_source.h"
 
 class Circuit : public I_Printable {
+private:
+    static constexpr const char* default_name = "Circuit";
 protected:
     std::map<std::string, Node*> nodes;
     std::map<int,std::string> nodeId_map;
@@ -24,7 +26,7 @@ protected:
     void add_voltage_source(std::string& voltageSourceId, std::string& node1, std::string& node2, double voltage);
     void add_current_source(std::string& currentSourceId, std::string& node1, std::string& node2, double current);
 public:
-    Circuit(std::string name="Circuit");
+    Circuit(std::string name=default_name);
     void parse_netlist(const std::string& filename);
     void assemble_MNA_system();
 
@@ -35,6 +37,10 @@ public:
     
     const std::map<int, std::map<int, double>>& get_MNA_matrix() const { return mna_matrix; }
     const std::map<int, double>& get_MNA_vector() const { return mna_vector; }
+    const std::map<std::string, Node*>& get_nodes() const { return nodes; }
+
+    void deploy_solution(const std::vector<double>& solution);
+    void print_solution(std::ostream& os = std::cout) const;
     ~Circuit();
 };
 
