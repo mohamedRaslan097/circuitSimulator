@@ -4,6 +4,9 @@ A high-performance circuit simulation tool.
 
 ## 📦 Current Version
 
+**Release: v2.0.0 - Phase 2 Complete**  
+*DC Solver*
+
 **Release: v1.0.0 - Phase 1 Complete**  
 *MNA System Assembly*
 
@@ -39,6 +42,7 @@ g++ -std=c++17 -Wall -g -I./include src/*.cpp main/main.cpp -o build/debug/main.
 g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_components.cpp -o build/debug/test_components.exe
 g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_netlist_parsing.cpp -o build/debug/test_netlist_parsing.exe
 g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_mna_assembly.cpp -o build/debug/test_mna_assembly.exe
+g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_dc_analysis.cpp -o build/debug/test_dc_analysis.exe
 ```
 
 ### Running the Simulator
@@ -50,8 +54,8 @@ g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_mna_assembly.cpp -o bui
 # With output file
 ./build/debug/main.exe -i circuit.net -o results.txt
 
-# Verbose mode (print to console)
-./build/debug/main.exe -i circuit.net -o results.txt -v
+# Verbose mode
+./build/debug/main.exe -i circuit.net -v
 
 # Show help
 ./build/debug/main.exe -h
@@ -61,7 +65,6 @@ g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_mna_assembly.cpp -o bui
 - `-i <file>` - Input netlist file (required)
 - `-o <file>` - Output results file (default: output.log)
 - `-v` - Verbose mode (display results to console)
-- `-p` - Pause before exit (keep console open)
 - `-h` - Show help message
 
 ### Running Tests
@@ -71,6 +74,7 @@ g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_mna_assembly.cpp -o bui
 ./build/debug/test_components.exe
 ./build/debug/test_netlist_parsing.exe
 ./build/debug/test_mna_assembly.exe
+./build/debug/test_dc_analysis.exe
 ```
 
 ### Netlist Format
@@ -93,7 +97,20 @@ R4 3 0 1000
 R5 2 3 100
 ```
 
-## ✨ Implemented Features (Phase 1)
+## ✨ Implemented Features
+
+### V1.0: MNA Assembly ✅ COMPLETE
+- ✅ Project structure and build system
+- ✅ Core component classes
+- ✅ Netlist parsing
+- ✅ MNA system assembly
+
+### V2.0 : DC Analysis ✅ COMPLETE
+- ✅ Modified Gauss-Seidel Method solver (PIONEERED)
+- ✅ DC analysis validation
+- ✅ Solution verification
+#### V2.5 : DC Analysis With Configurable Method Solver 🔧 WIP
+- 🔧 Sparse LU Factorization Method solver
 
 ### Core Components
 - ✅ **Resistors** - Linear resistive elements
@@ -101,7 +118,7 @@ R5 2 3 100
 - ✅ **Current Sources** - Independent DC current sources
 ```
 ╔══════════════════════════════════════════════════════╗
-║           PHASE 1 COMPONENT QUICK REFERENCE          ║
+║           COMPONENTS QUICK REFERENCE                 ║
 ╠══════════════════════════════════════════════════════╣
 ║  RESISTOR                                            ║
 ║  ────────                                            ║
@@ -131,6 +148,7 @@ R5 2 3 100
 
 ### Circuit Analysis
 - ✅ **Modified Nodal Analysis (MNA)** - Efficient matrix assembly
+- ✅ **DC Analysis Solver (OP)** - DC Operating Point Solver
 
 ### User Interface
 - ✅ **Command-Line Interface** - Flexible argument parsing
@@ -156,7 +174,7 @@ R5 2 3 100
 - ✅ Circuit Topology represented
 - ✅ Unit tests for basic components
 
-## 🔧 Phase 2: DC Analysis Engine
+## 🔧 Phase 2: DC Analysis Engine ✅
 
 ### Objectives:
 
@@ -165,8 +183,8 @@ R5 2 3 100
   - Build source vector (I vector)
   - Solve linear system: Gv = I
 - Add linear solver:
-  - Start with Gaussian elimination
-  - Later: LU decomposition or use Eigen library
+  - Start with Gauss-Seidel
+  - Later: LU decomposition 🔧
 - Support basic components:
   - Resistors
   - Independent voltage/current sources
