@@ -4,10 +4,10 @@ A high-performance circuit simulation tool.
 
 ## 📦 Current Version
 
-**Release: v2.0.0 - Phase 2 Complete**  
+**Release: v2.0 - Phase 2 Complete**  
 *DC Solver*
 
-**Release: v1.0.0 - Phase 1 Complete**  
+**Release: v1.0 - Phase 1 Complete**  
 *MNA System Assembly*
 
 ---
