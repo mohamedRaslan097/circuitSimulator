@@ -13,11 +13,12 @@ const string TEST_DIR = "tests/test_netlists/";
 void test_basic_netlist_parsing() {
     string filename = "basic.net";
     
-    Circuit circuit("Test");
+    Circuit circuit;
     circuit.parse_netlist(TEST_DIR + filename);
     
     ostringstream oss;
     circuit.print(oss);
+    
     string output = oss.str();
     
     assert(output.find("Simple Circuit") != string::npos);
@@ -30,7 +31,7 @@ void test_basic_netlist_parsing() {
 void test_single_word_comment_lines() {
     string filename = "single_comment.net";
     
-    Circuit circuit("Test");
+    Circuit circuit;
     
     try {
         circuit.parse_netlist(TEST_DIR + filename);
@@ -59,7 +60,7 @@ void test_single_word_comment_lines() {
 void test_multi_word_comment_lines() {
     string filename = "multi_comment.net";
     
-    Circuit circuit("Test");
+    Circuit circuit;
     
     try {
         circuit.parse_netlist(TEST_DIR + filename);
@@ -88,7 +89,7 @@ void test_multi_word_comment_lines() {
 void test_multiple_consecutive_comments() {
     string filename = "consecutive_comments.net";
     
-    Circuit circuit("Test");
+    Circuit circuit;
     
     try {
         circuit.parse_netlist(TEST_DIR + filename);
@@ -117,7 +118,7 @@ void test_multiple_consecutive_comments() {
 void test_inline_comments() {
     string filename = "inline_comments.net";
     
-    Circuit circuit("Test");
+    Circuit circuit;
     
     try {
         circuit.parse_netlist(TEST_DIR + filename);
@@ -146,7 +147,7 @@ void test_inline_comments() {
 void test_empty_lines_in_netlist() {
     string filename = "empty_lines.net";
     
-    Circuit circuit("Test");
+    Circuit circuit;
     
     try {
         circuit.parse_netlist(TEST_DIR + filename);
@@ -175,7 +176,7 @@ void test_empty_lines_in_netlist() {
 void test_mixed_case_component_types() {
     string filename = "mixed_case.net";
     
-    Circuit circuit("Test");
+    Circuit circuit;
     circuit.parse_netlist(TEST_DIR + filename);
     
     ostringstream oss;
@@ -192,7 +193,7 @@ void test_mixed_case_component_types() {
 void test_component_value_precision() {
     string filename = "value_precision.net";
     
-    Circuit circuit("Test");
+    Circuit circuit;
     circuit.parse_netlist(TEST_DIR + filename);
     
     ostringstream oss;
@@ -206,7 +207,7 @@ void test_component_value_precision() {
 }
 
 void test_existing_netlist_file() {
-    Circuit circuit("Test");
+    Circuit circuit;
     
     string filename = "netlist.txt";
     circuit.parse_netlist(TEST_DIR + filename);
@@ -227,7 +228,7 @@ void test_existing_netlist_file() {
 }
 
 void test_existing_comment_netlist_file() {
-    Circuit circuit("Test");
+    Circuit circuit;
     
     try {
         circuit.parse_netlist(TEST_DIR + "test_netlist_comments.txt");
