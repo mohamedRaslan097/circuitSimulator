@@ -109,8 +109,10 @@ R5 2 3 100
 - ✅ Modified Gauss-Seidel Method solver (PIONEERED)
 - ✅ DC analysis validation
 - ✅ Solution verification
-#### V2.5 : DC Analysis With Configurable Method Solver 🔧 WIP
-- 🔧 Sparse LU Factorization Method solver
+
+#### VX.X : DC Analysis With Configurable Method Solver 🔬 Future Work
+- ❌ Sparse LU Decomposition Method solver
+- High Implementation Complexity 
 
 ### Core Components
 - ✅ **Resistors** - Linear resistive elements

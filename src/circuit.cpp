@@ -1,5 +1,6 @@
 #include "circuit.h"
 #include <set>
+
 Circuit::Circuit(std::string name) : circuit_name(name) {
     nodes.clear();
     components.clear();
@@ -15,6 +16,8 @@ Circuit::~Circuit() {
         delete pair.second;
     }
 }
+
+// Helper functions
 
 void Circuit::add_node(std::string& nodeId) {
     if (nodes.find(nodeId) == nodes.end()) {
@@ -54,6 +57,8 @@ void Circuit::add_current_source(std::string& currentSourceId, std::string& node
         throw std::runtime_error("Current source with ID " + currentSourceId + " already exists in the circuit.");
     }
 }
+
+// Core functions
 
 void Circuit::parse_netlist(const std::string& filename) {
     std::ifstream file(filename);
@@ -101,6 +106,37 @@ void Circuit::parse_netlist(const std::string& filename) {
     }
 }
 
+void Circuit::assemble_MNA_system() {
+    mna_matrix.clear();
+    for(const auto& component : components) {
+        Component_contribution contrib = component.second->get_contribution();
+
+        for(const auto& mc : contrib.matrixStamps)
+            mna_matrix[mc.row][mc.col] += mc.value;
+        
+        for(const auto& vc : contrib.vectorStamps)
+            mna_vector[vc.row] += vc.value;
+    }
+}
+
+void Circuit::deploy_dc_solution(const std::vector<double>& solution) {
+    for (size_t i = 1; i < solution.size(); i++)
+    {
+        if (nodeId_map.find(i) != nodeId_map.end()) {
+            std::string node_name = nodeId_map.at(i);
+            nodes[node_name]->voltage = solution[i];
+        } else if (extraVarId_map.find(i) != extraVarId_map.end()) {
+            std::string componednt_name = extraVarId_map.at(i).substr(1);
+            dynamic_cast<Voltage_source*>(components[componednt_name])->set_current(solution[i]);
+        }else {
+            throw std::runtime_error("Solution index " + std::to_string(i) + " does not correspond to any node or source.");
+        }
+    }
+    Node::valid = true;
+}
+
+// Print functions
+
 void Circuit::print_nodes(std::ostream& os) const {
     os << "Circuit Nodes:" << std::endl;
     os << std::string(40, '-') << std::endl;
@@ -118,36 +154,6 @@ void Circuit::print_components(std::ostream& os) const {
     os << std::string(40, '-') << std::endl;
     for (const auto& pair : components) 
         os << *(pair.second);
-}
-
-void Circuit::print(std::ostream& os) const {
-    os << std::string(40, '=') << std::endl;
-    os << "Circuit Name: " << circuit_name << std::endl;
-    os << std::string(40, '=') << std::endl << std::endl;
-
-    print_components(os);
-
-    if(mna_matrix.size() > 0)
-        print_MNA_system(os);
-
-    if(Node::valid)
-        print_solution(os);
-    else
-        print_nodes(os);
-    
-}
-
-void Circuit::assemble_MNA_system() {
-    mna_matrix.clear();
-    for(const auto& component : components) {
-        Component_contribution contrib = component.second->get_contribution();
-
-        for(const auto& mc : contrib.matrixStamps)
-            mna_matrix[mc.row][mc.col] += mc.value;
-        
-        for(const auto& vc : contrib.vectorStamps)
-            mna_vector[vc.row] += vc.value;
-    }
 }
 
 void Circuit::print_MNA_system(std::ostream& os) const {
@@ -204,24 +210,8 @@ void Circuit::print_MNA_system(std::ostream& os) const {
         for(const auto& extra_var : extraVarId_map) {
             os << extra_var.second << " ";
         }
-        os << std::endl;
+        os << std::endl << std::endl;
     }
-}
-
-void Circuit::deploy_solution(const std::vector<double>& solution) {
-    for (size_t i = 1; i < solution.size(); i++)
-    {
-        if (nodeId_map.find(i) != nodeId_map.end()) {
-            std::string node_name = nodeId_map.at(i);
-            nodes[node_name]->voltage = solution[i];
-        } else if (extraVarId_map.find(i) != extraVarId_map.end()) {
-            std::string componednt_name = extraVarId_map.at(i).substr(1);
-            dynamic_cast<Voltage_source*>(components[componednt_name])->set_current(solution[i]);
-        }else {
-            throw std::runtime_error("Solution index " + std::to_string(i) + " does not correspond to any node or source.");
-        }
-    }
-    Node::valid = true;
 }
 
 void Circuit::print_extraVars(std::ostream& os) const {
@@ -241,4 +231,21 @@ void Circuit::print_solution(std::ostream& os) const {
        <<   "╚════════════════════════════════════╝\n\n";
     print_nodes(os);
     print_extraVars(os);
+}
+
+void Circuit::print(std::ostream& os) const {
+    os << std::string(40, '=') << std::endl;
+    os << "Circuit Name: " << circuit_name << std::endl;
+    os << std::string(40, '=') << std::endl << std::endl;
+
+    print_components(os);
+
+    if(mna_matrix.size() > 0)
+        print_MNA_system(os);
+
+    if(Node::valid)
+        print_solution(os);
+    else
+        print_nodes(os);
+    
 }

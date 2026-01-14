@@ -2,8 +2,8 @@
 Solver::Solver(int max_iter, double tolerance)
     : max_iter(max_iter), tolerance(tolerance), converge_iters(0), converged(false) {}
 
-void Solver::solve_MNA_system(const std::map<int,std::map<int,double>>& mna_matrix,
-                              const std::map<int, double>& mna_vector,
+void Solver::solve_MNA_system(const std::unordered_map<int,std::unordered_map<int,double>>& mna_matrix,
+                              const std::unordered_map<int, double>& mna_vector,
                               std::vector<double>& solution) {
     solution.resize(mna_matrix.size()+1, 0.0);
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
@@ -12,8 +12,8 @@ void Solver::solve_MNA_system(const std::map<int,std::map<int,double>>& mna_matr
     duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 }
 
-void Solver::gauss_seidel_solver(const std::map<int,std::map<int,double>>& mna_matrix,
-                                 const std::map<int, double>& mna_vector,
+void Solver::gauss_seidel_solver(const std::unordered_map<int,std::unordered_map<int,double>>& mna_matrix,
+                                 const std::unordered_map<int, double>& mna_vector,
                                  std::vector<double>& solution) {
     
     // Hack to Overcome zero diagonal issues
