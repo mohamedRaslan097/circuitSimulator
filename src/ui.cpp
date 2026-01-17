@@ -45,7 +45,7 @@ void UI::print_usage() const {
 
 void UI::print_banner(std::ostream& os) const {
     os << "╔════════════════════════════════════╗\n"
-       << "║   Circuit Simulator v2.0.0         ║\n"
+       << "║   Circuit Simulator v2.5           ║\n"
        << "║     DC Solver                      ║\n"
        << "╚════════════════════════════════════╝\n\n";
 }

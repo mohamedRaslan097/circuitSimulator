@@ -6,6 +6,8 @@
 #include "Resistor.h"
 #include "voltage_source.h"
 #include "current_source.h"
+#include "inductor.h"
+#include "capacitor.h"
 
 class Circuit : public I_Printable {
 private:
@@ -26,6 +28,8 @@ protected:
     void add_resistor(std::string& resistorId, std::string& node1, std::string& node2, double resistance);
     void add_voltage_source(std::string& voltageSourceId, std::string& node1, std::string& node2, double voltage);
     void add_current_source(std::string& currentSourceId, std::string& node1, std::string& node2, double current);
+    void add_inductor(std::string& inductorId, std::string& node1, std::string& node2, double inductance);
+    void add_capacitor(std::string& capacitorId, std::string& node1, std::string& node2, double capacitance);
 public:
     Circuit(std::string name=default_name);
     

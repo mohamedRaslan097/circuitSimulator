@@ -1,10 +1,6 @@
 #include "current_source.h"
 
-int Current_source::id_counter = 0;
-
 Current_source::Current_source(const std::string& id, Node* ni, Node* nj, double c) : Component(id, ni, nj), current(c) {}
-
-Current_source::Current_source(Node* ni, Node* nj, double c) : Current_source(default_id+std::to_string(id_counter++), ni, nj, c) {}
 
 double Current_source::get_voltage_drop() {
     if(!Node::valid)

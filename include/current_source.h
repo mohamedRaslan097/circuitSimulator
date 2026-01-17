@@ -4,8 +4,7 @@
 #include "component.h"
 
 class Current_source : public Component {
-private:
-    static int id_counter;
+public:
     static constexpr const char* default_id = "I";
     static constexpr const char* type = "Current Source";
 protected:

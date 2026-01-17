@@ -4,8 +4,6 @@
 #include "Component.h"
 
 class Voltage_source : public Component {
-private:
-    static int id_counter;
 public:
     static constexpr const char* default_id = "V";
     static constexpr const char* stamping_id = "I";

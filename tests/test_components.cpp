@@ -77,10 +77,10 @@ void test_multiple_components() {
     Node n2("2");
     Node n3("3");
     
-    Resistor r1(&n1, &n2, 1000.0);
-    Resistor r2(&n2, &n3, 2000.0);
-    Voltage_source vs(&n1, &n3, 9.0);
-    Current_source cs(&n2, &n1, 0.001);
+    Resistor r1("R0",&n1, &n2, 1000.0);
+    Resistor r2("R1",&n2, &n3, 2000.0);
+    Voltage_source vs("V0",&n1, &n3, 9.0);
+    Current_source cs("I0",&n2, &n1, 0.001);
     
     ostringstream oss;
     oss << r1 << r2 << vs << cs;

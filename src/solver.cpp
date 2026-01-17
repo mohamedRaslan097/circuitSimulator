@@ -1,6 +1,8 @@
 #include "solver.h"
-Solver::Solver(int max_iter, double tolerance)
-    : max_iter(max_iter), tolerance(tolerance), converge_iters(0), converged(false) {}
+#include <set>
+
+Solver::Solver(int max_iter, double tolerance, double damping_factor)
+    : max_iter(max_iter), tolerance(tolerance), damping_factor(damping_factor), converge_iters(0), converged(false) {}
 
 void Solver::solve_MNA_system(const std::unordered_map<int,std::unordered_map<int,double>>& mna_matrix,
                               const std::unordered_map<int, double>& mna_vector,
@@ -18,7 +20,8 @@ void Solver::gauss_seidel_solver(const std::unordered_map<int,std::unordered_map
     
     // Hack to Overcome zero diagonal issues
     std::vector<double> lhs_values(solution.size(), 0.0);
-    std::vector<double> targets(solution.size(), 0.0);
+    std::vector<int> targets(solution.size(), 0);
+    std::set<int> used_targets;
     for (size_t i =0; i < targets.size(); i++)
         targets[i] = i;
     
@@ -26,19 +29,39 @@ void Solver::gauss_seidel_solver(const std::unordered_map<int,std::unordered_map
     {
         for (auto& [row, col_map] : mna_matrix)
         {
+            // Assign Unique Target in case of conflict
             if (col_map.find(targets[row]) == col_map.end() || col_map.at(targets[row]) == 0.0){
-                // find index of the one with max value
-                double max_val = INT_MIN;
-                int max_idx = -1;
-                for (auto& [col, value] : col_map)
-                    if (value > max_val){
-                        max_val = value;
-                        max_idx = col;
+                double max_val = 0.0;
+                int max_idx = row;
+                // find index of the one with max non used target value
+                for (auto& [col, value] : col_map){
+                    // Value smaller than current max
+                    if (std::abs(value) <= max_val || value == 0.0)
+                        continue;
+                    // col is already used
+                    if (used_targets.find(col) != used_targets.end()){
+                        // No target found yet
+                        if (max_idx == row)
+                            max_idx = col;
+                        continue;
                     }
-                std::swap(targets[row], targets[max_idx]);
+                    // New max found
+                    max_val = std::abs(value);
+                    max_idx = col;
+                }
+                // Row full of zeros
+                if (max_idx == row)
+                    continue;
+                // Swap targets
+                used_targets.insert(targets[row]);
+                used_targets.insert(targets[targets[max_idx]]);
+                std::swap(targets[row], targets[targets[max_idx]]);
+                    // In case max_idx returned with already used target
+                    // this means this is the only option left
+                    // so we swap with current row
+                    // and let the other row find new target next iterations
             }
-            //     throw std::runtime_error("Zero diagonal element detected in MNA matrix at row " + std::to_string(row));
-            
+
             double sum = 0.0;
             double diag = 0.0;
             double rhs_value = 0.0;
@@ -53,20 +76,24 @@ void Solver::gauss_seidel_solver(const std::unordered_map<int,std::unordered_map
             if (mna_vector.find(row) != mna_vector.end())
                 rhs_value = mna_vector.at(row);
             
-            solution[targets[row]] = (rhs_value - sum) / diag;
+            double x_new = (rhs_value - sum) / diag;
+            solution[targets[row]] = damping_factor * x_new + (1 - damping_factor) * solution[targets[row]];
             lhs_value = sum + diag * solution[targets[row]];
             lhs_values[row] = lhs_value;
         }
         // Check convergence
         if (converge_iters % 5 != 0)
             continue;
+        converged = true;
         for (size_t i = 0; i < solution.size(); i++) {
             auto rhs = mna_vector.find(i) != mna_vector.end() ? mna_vector.at(i) : 0.0;
-            if (std::abs(lhs_values[i] - rhs) < tolerance) {
-                converged = true;
-                return;
+            if (std::abs(lhs_values[i] - rhs) > tolerance) {
+                converged = false;
+                break;
             }
         }
+        if (converged)
+            return;
     }
 }
 

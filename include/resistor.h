@@ -4,8 +4,7 @@
 #include "component.h"
 
 class Resistor : public Component{
-private:
-    static int id_counter;
+public:
     static constexpr const char* default_id = "R";
     static constexpr const char* type = "Resistor";
 protected:

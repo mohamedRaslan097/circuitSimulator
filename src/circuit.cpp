@@ -1,5 +1,4 @@
 #include "circuit.h"
-#include <set>
 
 Circuit::Circuit(std::string name) : circuit_name(name) {
     nodes.clear();
@@ -58,6 +57,25 @@ void Circuit::add_current_source(std::string& currentSourceId, std::string& node
     }
 }
 
+void Circuit::add_inductor(std::string& inductorId, std::string& node1, std::string& node2, double inductance) {
+    if(components.find(inductorId) == components.end()) {
+        Inductor* inductor = new Inductor(inductorId, nodes[node1], nodes[node2], inductance);
+        components[inductorId] = inductor;
+        extraVarId_map[inductor->get_vc_id()] = Inductor::stamping_id + inductorId;
+    } else {
+        throw std::runtime_error("Inductor with ID " + inductorId + " already exists in the circuit.");
+    }
+}
+
+void Circuit::add_capacitor(std::string& capacitorId, std::string& node1, std::string& node2, double capacitance) {
+    if(components.find(capacitorId) == components.end()) {
+        Capacitor* capacitor = new Capacitor(capacitorId, nodes[node1], nodes[node2], capacitance);
+        components[capacitorId] = capacitor;
+    } else {
+        throw std::runtime_error("Capacitor with ID " + capacitorId + " already exists in the circuit.");
+    }
+}
+
 // Core functions
 
 void Circuit::parse_netlist(const std::string& filename) {
@@ -95,12 +113,16 @@ void Circuit::parse_netlist(const std::string& filename) {
         add_node(node1_id);
         add_node(node2_id);
         
-        if(toupper(component_id[0]) == 'R')
+        if(toupper(component_id[0]) == Resistor::default_id[0])
             add_resistor(component_id, node1_id, node2_id, value);
-        else if(toupper(component_id[0]) == 'V')
+        else if(toupper(component_id[0]) == Voltage_source::default_id[0])
             add_voltage_source(component_id, node1_id, node2_id, value);
-        else if(toupper(component_id[0]) == 'I')
+        else if(toupper(component_id[0]) == Current_source::default_id[0])
             add_current_source(component_id, node1_id, node2_id, value);
+        else if(toupper(component_id[0]) == Inductor::default_id[0])
+            add_inductor(component_id, node1_id, node2_id, value);
+        else if(toupper(component_id[0]) == Capacitor::default_id[0])
+            add_capacitor(component_id, node1_id, node2_id, value);
         else
             throw std::runtime_error("Unknown component type in netlist: " + component_id);
     }
@@ -127,7 +149,10 @@ void Circuit::deploy_dc_solution(const std::vector<double>& solution) {
             nodes[node_name]->voltage = solution[i];
         } else if (extraVarId_map.find(i) != extraVarId_map.end()) {
             std::string componednt_name = extraVarId_map.at(i).substr(1);
-            dynamic_cast<Voltage_source*>(components[componednt_name])->set_current(solution[i]);
+            if(extraVarId_map.at(i)[1] == Voltage_source::default_id[0])
+                dynamic_cast<Voltage_source*>(components[componednt_name])->set_current(solution[i]);
+            else 
+                dynamic_cast<Inductor*>(components[componednt_name])->set_current(solution[i]);
         }else {
             throw std::runtime_error("Solution index " + std::to_string(i) + " does not correspond to any node or source.");
         }
@@ -142,8 +167,8 @@ void Circuit::print_nodes(std::ostream& os) const {
     os << std::string(40, '-') << std::endl;
     os << "Node(ID)"<< std::setw(16) <<"Voltage" << std::endl;
     os << std::string(40, '-') << std::endl;
-    for (const auto& pair : nodes)
-        os << *(pair.second) << std::endl;
+    for (const auto& pair : nodeId_map)
+        os << *(nodes.at(pair.second)) << std::endl;
     os << std::endl;
 }
 
