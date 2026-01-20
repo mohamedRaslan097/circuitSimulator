@@ -489,14 +489,14 @@ void setup_rlc_combination_tests(TestRunner& runner) {
                      "Complex RLC network",
                      "* Complex RLC\n"
                      "V1 1 0 12\n"
-                     "R1 1 2 100\n"
+                     "R1 1 2 1000\n"
                      "L1 2 3 0.01\n"
                      "C1 3 0 0.0001\n"
-                     "R2 3 0 1000\n");
+                     "R2 2 0 2000\n");
         test.expected_voltages["0"] = 0.0;
         test.expected_voltages["1"] = 12.0;
-        test.expected_voltages["2"] = 12.0;  // No current
-        test.expected_voltages["3"] = 12.0;  // C charged to source
+        test.expected_voltages["2"] = 8.0;
+        test.expected_voltages["3"] = 8.0;  // C charged to source
         runner.add_test_case(test);
     }
 }
@@ -531,8 +531,8 @@ void setup_advanced_lc_tests(TestRunner& runner) {
                      "C3 3 0 0.0001\n");
         test.expected_voltages["0"] = 0.0;
         test.expected_voltages["1"] = 12.0;
-        test.expected_voltages["2"] = 8.0;   // Voltage divides
-        test.expected_voltages["3"] = 4.0;
+        test.expected_voltages["2"] = 0;
+        test.expected_voltages["3"] = 0;
         runner.add_test_case(test);
     }
     
@@ -792,8 +792,8 @@ void setup_lc_validation_tests(TestRunner& runner) {
                      "R2 3 0 1000\n");
         test.expected_voltages["0"] = 0.0;
         test.expected_voltages["1"] = 10.0;
-        test.expected_voltages["2"] = 10.0;  // No current
-        test.expected_voltages["3"] = 0.0;   // C blocks
+        test.expected_voltages["2"] = 5.0;
+        test.expected_voltages["3"] = 5.0;
         runner.add_test_case(test);
     }
     

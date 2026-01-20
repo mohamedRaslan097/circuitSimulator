@@ -14,10 +14,11 @@ double Resistor::get_current(){
 }
 
 void Resistor::print(std::ostream& os) const {
+    double displayValue = resistance / 1000.0;  // Convert Ohms to kOhms
     os << std::left << std::setw(10) << "R(" + componentId + ")"
        << std::setw(6) << ni->name 
        << std::setw(6) << nj->name 
-       << std::right << std::fixed << std::setprecision(4) << std::setw(12) << resistance << " Ohms" << std::endl;
+       << std::right << std::fixed << std::setprecision(4) << std::setw(12) << displayValue << " kΩ" << std::endl;
 }
 
 Component_contribution Resistor::get_contribution(){

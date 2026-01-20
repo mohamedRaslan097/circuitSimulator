@@ -247,7 +247,7 @@ void Circuit::print_extraVars(std::ostream& os) const {
     for (const auto& [id, component_name] : extraVarId_map)
     os << std::left << std::setw(10) << "I_VS(" + component_name.substr(1) + ")"
        << std::right << std::fixed << std::setprecision(6) << std::setw(14) 
-       << components.at(component_name.substr(1))->get_current() << " A"<< std::endl;
+       << components.at(component_name.substr(1))->get_current() * 1000.0 << " mA"<< std::endl;
 }
 
 void Circuit::print_solution(std::ostream& os) const {

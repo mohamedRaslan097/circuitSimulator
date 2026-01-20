@@ -2,12 +2,15 @@
 
 A high-performance circuit simulation tool.
 
-## 📦 Current Version
+## 📦 Current Versions
 
-**Release: v2.0 - Phase 2 Complete**  
+**Release: v2.5**  
+*DC Solver v2*
+
+**Release: v2.0**  
 *DC Solver*
 
-**Release: v1.0 - Phase 1 Complete**  
+**Release: v1.0**  
 *MNA System Assembly*
 
 ---
@@ -22,6 +25,44 @@ circuitSimulator/
 ├── tests/                # Test suites
 └── build/                # Compiled executables
 ```
+
+---
+
+## ✨ Release Notes
+
+### V2.5: DC Analysis ✅ COMPLETE
+- ✅ Enhanced Modified Gauss-Seidel Method solver (PIONEERED Again)
+- ✅ Inductor/Capacitor DC behavior support
+
+### V2.0: DC Analysis ✅ COMPLETE
+- ✅ Modified Gauss-Seidel Method solver (PIONEERED)
+- ✅ DC analysis validation
+- ✅ Solution verification
+- ✅ Resistor DC behavior
+
+### V1.0: MNA Assembly ✅ COMPLETE
+- ✅ Project structure and build system
+- ✅ Core component classes
+- ✅ Netlist parsing
+- ✅ MNA system assembly
+
+### Core Components
+- ✅ **Resistors** - Linear resistive elements
+- ✅ **Voltage Sources** - Independent DC voltage sources
+- ✅ **Current Sources** - Independent DC current sources
+- ✅ **Inductors** - Short circuit at DC
+- ✅ **Capacitors** - Open circuit at DC
+
+### Netlist Parsing
+- ✅ **SPICE-like Format** - Industry-standard syntax
+
+### Circuit Analysis
+- ✅ **Modified Nodal Analysis (MNA)** - Efficient matrix assembly
+- ✅ **DC Analysis Solver (OP)** - DC Operating Point Solver
+  - ✅ **Modified Gauss-Seidel Solver (OP)** - Pioneered iterative solver for DC analysis
+
+### User Interface
+- ✅ **Command-Line Interface** - Flexible argument parsing
 
 ---
 
@@ -43,6 +84,7 @@ g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_components.cpp -o build
 g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_netlist_parsing.cpp -o build/debug/test_netlist_parsing.exe
 g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_mna_assembly.cpp -o build/debug/test_mna_assembly.exe
 g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_dc_analysis.cpp -o build/debug/test_dc_analysis.exe
+g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_dc_analysis_lc.cpp -o build/debug/test_dc_analysis_lc.exe
 ```
 
 ### Running the Simulator
@@ -62,10 +104,13 @@ g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_dc_analysis.cpp -o buil
 ```
 
 #### Command-Line Options
-- `-i <file>` - Input netlist file (required)
-- `-o <file>` - Output results file (default: output.log)
-- `-v` - Verbose mode (display results to console)
-- `-h` - Show help message
+
+| Flag | Description |
+|------|-------------|
+| `-i <file>` | Input netlist file (required) |
+| `-o <file>` | Output results file (default: output.log) |
+| `-v` | Verbose mode (display results to console) |
+| `-h` | Show help message |
 
 ### Running Tests
 
@@ -75,49 +120,75 @@ g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_dc_analysis.cpp -o buil
 ./build/debug/test_netlist_parsing.exe
 ./build/debug/test_mna_assembly.exe
 ./build/debug/test_dc_analysis.exe
+./build/debug/test_dc_analysis_lc.exe
 ```
 
-### Netlist Format
-The simulator uses a SPICE-like netlist format:
-```
-* Comment line
-V1 node- node+ value
-R1 node1 node2 resistance
-I1 node- node+ current
-```
+---
 
-Example (Wheatstone Bridge):
+## 🔌 Supported Components
+
+### Resistor (R)
 ```
-* Wheatstone Bridge
-V1 1 0 10.0
-R1 1 2 1000
-R2 2 0 1000
-R3 1 3 1000
-R4 3 0 1000
-R5 2 3 100
+Syntax:  R<name> <node+> <node-> <value>
+Example: R1 1 0 1000
+Units:   Ohms (Ω)
+Range:   R > 0
 ```
 
-## ✨ Implemented Features
+**MNA Stamping:**
+- Adds conductance `G = 1/R` to diagonal elements `[i,i]` and `[j,j]`
+- Adds `-G` to off-diagonal elements `[i,j]` and `[j,i]`
 
-### V1.0: MNA Assembly ✅ COMPLETE
-- ✅ Project structure and build system
-- ✅ Core component classes
-- ✅ Netlist parsing
-- ✅ MNA system assembly
+### Voltage Source (V)
+```
+Syntax:  V<name> <node+> <node-> <value>
+Example: V1 1 0 10
+Units:   Volts (V)
+Range:   Any real number
+```
 
-### V2.0 : DC Analysis ✅ COMPLETE
-- ✅ Modified Gauss-Seidel Method solver (PIONEERED)
-- ✅ DC analysis validation
-- ✅ Solution verification
+**Convention:** `V<name> n+ n-` means voltage at `n+` is `value` volts higher than `n-`
 
-#### VX.X : DC Analysis With Configurable Method Solver 🔬 Future Work
-- ❌ Sparse LU Decomposition Method solver
-- High Implementation Complexity 
+**MNA Stamping:**
+- Introduces extra variable for branch current
+- Adds KCL entries linking nodes to branch current
+- Adds voltage constraint equation to RHS
 
-### Core Components
-- ✅ **Resistors** - Linear resistive elements
-- ✅ **Voltage Sources** - Independent DC voltage sources
-- ✅ **Current Sources** - Independent DC current sources
+### Current Source (I)
+```
+Syntax:  I<name> <node+> <node-> <value>
+Example: I1 0 1 0.01
+Units:   Amperes (A)
+Range:   Any real number
+```
+
+**Convention:** `I<name> n+ n-` means current flows FROM `n+` TO `n-`
+
+**MNA Stamping:**
+- Stamps `-I` to RHS at `node+` (current leaving)
+- Stamps `+I` to RHS at `node-` (current entering)
+
+### Inductor (L)
+```
+Syntax:  L<name> <node+> <node-> <value>
+Example: L1 1 2 0.001
+Units:   Henries (H)
+Range:   L > 0
+```
+
+**DC Behavior:** Acts as **SHORT CIRCUIT** (wire) - introduces extra variable for current with zero voltage drop constraint.
+
+### Capacitor (C)
+```
+Syntax:  C<name> <node+> <node-> <value>
+Example: C1 1 2 0.0001
+Units:   Farads (F)
+Range:   C > 0
+```
+
+**DC Behavior:** Acts as **OPEN CIRCUIT** - no MNA contribution at DC steady state.
+
+### Components Quick Reference
 ```
 ╔══════════════════════════════════════════════════════╗
 ║           COMPONENTS QUICK REFERENCE                 ║
@@ -142,20 +213,167 @@ R5 2 3 100
 ║  Example: I1 0 1 1                                   ║
 ║  Units:   A (amperes)                                ║
 ║  Range:   Any real number                            ║
+║                                                      ║
+║  INDUCTOR                                            ║
+║  ────────                                            ║
+║  Syntax:  L<name> <n+> <n-> <value>                  ║
+║  Example: L1 1 2 0.001                               ║
+║  Units:   H (henries)                                ║
+║  DC:      Short circuit                              ║
+║                                                      ║
+║  CAPACITOR                                           ║
+║  ─────────                                           ║
+║  Syntax:  C<name> <n+> <n-> <value>                  ║
+║  Example: C1 1 2 0.0001                              ║
+║  Units:   F (farads)                                 ║
+║  DC:      Open circuit                               ║
 ╚══════════════════════════════════════════════════════╝
 ```
 
-### Netlist Parsing
-- ✅ **SPICE-like Format** - Industry-standard syntax
+---
 
-### Circuit Analysis
-- ✅ **Modified Nodal Analysis (MNA)** - Efficient matrix assembly
-- ✅ **DC Analysis Solver (OP)** - DC Operating Point Solver
+## 📝 Netlist Format
 
-### User Interface
-- ✅ **Command-Line Interface** - Flexible argument parsing
+### Basic Structure
+```
+* Comment line (starts with *)
+<component> <node1> <node2> <value>
+...
+```
+
+### Features
+- First line starting with `*` sets circuit name
+- Comments can appear anywhere (line must start with `*`)
+- Node IDs can be strings or numbers
+- Node "0" is always ground reference
+- Case-insensitive component prefixes
+
+### Example Netlists
+
+**Voltage Divider:**
+```
+* Voltage Divider
+V1 1 0 10
+R1 1 2 1000
+R2 2 0 1000
+```
+
+**Current Source with Resistor:**
+```
+* Current Source with Resistor
+I1 0 1 0.01
+R1 1 0 1000
+```
+
+**Wheatstone Bridge:**
+```
+* Wheatstone Bridge
+V1 1 0 10.0
+R1 1 2 1000
+R2 2 0 1000
+R3 1 3 1000
+R4 3 0 1000
+R5 2 3 100
+```
 
 ---
+
+## 🏗️ Architecture
+
+### Core Classes
+
+| Class | File | Description |
+|-------|------|-------------|
+| `Circuit` | circuit.h/cpp | Main circuit container - holds nodes, components, MNA system |
+| `Simulator` | simulator.h/cpp | Orchestrates simulation runs (DC analysis) |
+| `Solver` | solver.h/cpp | Wrapper for linear system solving |
+| `Gauss_seidel` | gauss_seidel.h/cpp | Modified Gauss-Seidel iterative solver |
+| `Component` | component.h/cpp | Abstract base class for all circuit elements |
+| `Node` | node.h/cpp | Represents circuit nodes with voltage |
+| `Component_contribution` | component_contribution.h/cpp | Stores MNA matrix/vector stamps |
+
+### Component Classes
+
+| Component | Class | Prefix | MNA Behavior |
+|-----------|-------|--------|--------------|
+| Resistor | `Resistor` | R | Conductance stamping (G matrix) |
+| Voltage Source | `Voltage_source` | V | Extra variable for branch current |
+| Current Source | `Current_source` | I | RHS vector stamping only |
+| Inductor | `Inductor` | L | Short circuit at DC (extra variable) |
+| Capacitor | `Capacitor` | C | Open circuit at DC (no contribution) |
+
+---
+
+## 🧮 Modified Nodal Analysis (MNA)
+
+### System Structure
+The MNA system solves: **[A][x] = [b]**
+
+Where:
+- **[A]** = MNA matrix (conductances + voltage source constraints)
+- **[x]** = Solution vector (node voltages + branch currents)
+- **[b]** = RHS vector (current sources + voltage source values)
+
+### Matrix Assembly
+1. Ground node (node "0") is reference (V=0), not included in matrix
+2. Each component provides `Component_contribution` with:
+   - `matrixStamps` - entries for [A] matrix
+   - `vectorStamps` - entries for [b] vector
+3. Contributions are accumulated into sparse matrix structure
+
+---
+
+## 🔧 Solver: Modified Gauss-Seidel
+
+### Algorithm Features
+- **Iterative Method:** Gauss-Seidel with configurable damping
+- **Zero Diagonal Handling:** Dynamic pivoting (target swapping)
+- **Convergence Check:** Every 5 iterations, compares LHS vs RHS
+
+### Configuration
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `max_iter` | 1000 | Maximum iterations |
+| `tolerance` | 1e-9 | Convergence tolerance |
+| `damping_factor` | 0.5 | Relaxation factor (0 < λ ≤ 1) |
+
+### Update Formula
+```
+x_new[i] = (b[i] - Σ A[i,j]*x[j]) / A[i,i]   (j ≠ i)
+x[i] = λ * x_new[i] + (1-λ) * x_old[i]
+```
+
+---
+
+## 📊 Output Format
+
+### Circuit Information
+- Node list with voltages
+- Component list with values
+- MNA matrix visualization
+- Extra variables (branch currents)
+
+### DC Solution
+```
+╔════════════════════════════════════╗
+║   DC ANALYSIS RESULTS              ║
+╚════════════════════════════════════╝
+
+Circuit Nodes:
+Node(ID)        Voltage
+Node(0)       0.000000 V
+Node(1)      10.000000 V
+...
+
+Circuit VS Currents:
+I_VS(ID)        Current
+I_VS(V1)     0.010000 A
+```
+
+---
+
+## 🗺️ Development Roadmap
 
 ## 📋 Phase 1: Foundation & Core Architecture ✅
 ### Objectives:
@@ -216,10 +434,10 @@ R5 2 3 100
 
 ### Deliverables:
 
-- ✅ AC sweep from fmin to fmax
-- ✅ Filter response (low-pass, high-pass, band-pass)
-- ✅ Gain and phase output
-- ✅ Input/output impedance calculation
+- ⬜ AC sweep from fmin to fmax
+- ⬜ Filter response (low-pass, high-pass, band-pass)
+- ⬜ Gain and phase output
+- ⬜ Input/output impedance calculation
 
 ## ⚡ Phase 4: Transient Analysis
 
@@ -238,10 +456,10 @@ R5 2 3 100
 
 ### Deliverables:
 
-- ✅ RC/RL/RLC circuit transient response
-- ✅ Output waveform data (CSV format)
-- ✅ Configurable simulation time and timestep
-- ✅ Energy conservation verification
+- ⬜ RC/RL/RLC circuit transient response
+- ⬜ Output waveform data (CSV format)
+- ⬜ Configurable simulation time and timestep
+- ⬜ Energy conservation verification
 
 ## 🔬 Phase 5: Nonlinear Components
 
@@ -261,36 +479,31 @@ R5 2 3 100
 
 ### Deliverables:
 
-- ✅ Diode rectifier circuit simulation
-- ✅ BJT amplifier bias point
-- ✅ MOSFET inverter analysis
-- ✅ Convergence diagnostics
+- ⬜ Diode rectifier circuit simulation
+- ⬜ BJT amplifier bias point
+- ⬜ MOSFET inverter analysis
+- ⬜ Convergence diagnostics
 
 ## 🚀 Phase 6: Optimization & Advanced Features
-Objectives:
 
-Performance optimization:
-Sparse matrix techniques
-Parallel processing (OpenMP)
-Memory profiling
+### Objectives:
 
-
-Advanced analyses:
-Fourier analysis (FFT)
-Noise analysis
-Sensitivity analysis
-
-
-Model library:
-Op-amp models
-Transformer models
-Transmission lines
-
-
+- Performance optimization:
+  - Sparse matrix techniques
+  - Parallel processing (OpenMP)
+  - Memory profiling
+- Advanced analyses:
+  - Fourier analysis (FFT)
+  - Noise analysis
+  - Sensitivity analysis
+- Model library:
+  - Op-amp models
+  - Transformer models
+  - Transmission lines
 
 ### Deliverables:
 
-- ✅ 10x performance improvement
-- ✅ Component library with 20+ models
-- ✅ Benchmark suite
-- ✅ Documentation and examples
+- ⬜ 10x performance improvement
+- ⬜ Component library with 20+ models
+- ⬜ Benchmark suite
+- ⬜ Documentation and examples

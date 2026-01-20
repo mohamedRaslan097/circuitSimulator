@@ -16,7 +16,7 @@ void test_resistor_creation() {
     r1.print(oss);
     string output = oss.str();
     assert(output.find("R(R1)") != string::npos);
-    assert(output.find("100.0000 Ohms") != string::npos);
+    assert(output.find("0.1000 kΩ") != string::npos);
     
     cout << "[PASS] Resistor creation test passed" << endl;
 }
@@ -49,7 +49,7 @@ void test_current_source_creation() {
     cs.print(oss);
     string output = oss.str();
     assert(output.find("I(I1)") != string::npos);
-    assert(output.find("0.5000 A") != string::npos);
+    assert(output.find("500.0000 mA") != string::npos);
     
     cout << "[PASS] Current source creation test passed" << endl;
 }

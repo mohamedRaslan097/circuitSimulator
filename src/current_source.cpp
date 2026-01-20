@@ -11,10 +11,11 @@ double Current_source::get_voltage_drop() {
 double Current_source::get_current() {return current;}
 
 void Current_source::print(std::ostream& os) const {
+    double displayValue = current * 1000.0;  // Convert A to mA
     os << std::left << std::setw(10) << "I(" + componentId + ")"
        << std::setw(6) << ni->name 
        << std::setw(6) << nj->name 
-       << std::right << std::fixed << std::setprecision(4) << std::setw(12) << current << " A" << std::endl;
+       << std::right << std::fixed << std::setprecision(4) << std::setw(12) << displayValue << " mA" << std::endl;
 }
 
 Component_contribution Current_source::get_contribution(){

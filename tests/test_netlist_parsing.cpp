@@ -200,8 +200,8 @@ void test_component_value_precision() {
     circuit.print(oss);
     string output = oss.str();
     
-    assert(output.find("3.3") != string::npos);
-    assert(output.find("4700") != string::npos);
+    assert(output.find("3.3") != string::npos);      // Voltage source: 3.3 V
+    assert(output.find("4.7") != string::npos);      // Resistor: 4700 Ohms = 4.7 kOhm
     
     cout << "[PASS] Component value precision" << endl;
 }

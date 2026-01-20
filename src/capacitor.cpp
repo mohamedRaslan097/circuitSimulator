@@ -17,8 +17,9 @@ Component_contribution Capacitor::get_contribution(){
 }
 
 void Capacitor::print(std::ostream& os) const {
+    double displayValue = capacitance * 1e9;  // Convert F to nF
     os << std::left << std::setw(10) << "C(" + componentId + ")"
        << std::setw(6) << ni->name 
        << std::setw(6) << nj->name 
-       << std::right << std::fixed << std::setprecision(4) << std::setw(12) << capacitance << " F" << std::endl;
+       << std::right << std::fixed << std::setprecision(4) << std::setw(12) << displayValue << " nF" << std::endl;
 }
