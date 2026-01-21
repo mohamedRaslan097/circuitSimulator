@@ -7,12 +7,6 @@ A high-performance circuit simulation tool.
 **Release: v2.5**  
 *DC Solver v2*
 
-**Release: v2.0**  
-*DC Solver*
-
-**Release: v1.0**  
-*MNA System Assembly*
-
 ---
 
 ## 📁 Project Structure
