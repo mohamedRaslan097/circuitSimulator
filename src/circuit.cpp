@@ -27,8 +27,8 @@ void Circuit::add_node(std::string& nodeId) {
 }
 
 void Circuit::add_resistor(std::string& resistorId, std::string& node1, std::string& node2, double resistance) {
-    if (resistance < 0)
-        throw std::runtime_error("Resistor with ID " + resistorId + " has negative resistance.");
+    if (resistance <= 0)
+        throw std::runtime_error("Resistor with ID " + resistorId + " has non-positive resistance.");
     
     if(components.find(resistorId) == components.end()) {
         Resistor* resistor = new Resistor(resistorId, nodes[node1], nodes[node2], resistance);

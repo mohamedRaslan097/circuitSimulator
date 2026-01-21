@@ -13,9 +13,12 @@ Gauss_seidel::Gauss_seidel(int max_iter, double tolerance, double damping_factor
 void Gauss_seidel::initialize(size_t size) {
     lhs_values.assign(size, 0.0);
     targets.resize(size);
+    var_to_target.resize(size);
     independent_targets.clear();
-    for (size_t i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++){
         targets[i] = static_cast<int>(i);
+        var_to_target[i] = static_cast<int>(i);
+    }
     converge_iters = 0;
     converged = false;
 }
@@ -61,13 +64,14 @@ void Gauss_seidel::handle_zero_diagonal(int row, const std::unordered_map<int, d
         independent_targets.insert(max_idx);
     
     // swap targets targets[x]=max_idx and targets[row]
-    for (size_t i = 0; i < targets.size(); i++) {
-        if (targets[i] == max_idx) {
-            targets[i] = targets[row];
-            break;
-        }
-    }
+    int old_target = targets[row];
+    int other_target = var_to_target[max_idx];
+
     targets[row] = max_idx;
+    targets[other_target] = old_target;
+    
+    var_to_target[old_target] = other_target;
+    var_to_target[max_idx] = row;
 }
 
 double Gauss_seidel::compute_row_update(int row, const std::unordered_map<int, double>& col_map, const std::unordered_map<int, double>& mna_vector, std::vector<double>& solution) {

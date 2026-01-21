@@ -492,6 +492,10 @@ I_VS(V1)     0.010000 A
   - Sparse matrix techniques
   - Parallel processing (OpenMP)
   - Memory profiling
+  - Create a new data structure 
+    - Optimized storage for MNA matrix
+    - Faster access patterns
+      - Unordered map with open addressing
 - Advanced analyses:
   - Fourier analysis (FFT)
   - Noise analysis
