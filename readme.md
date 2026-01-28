@@ -2,10 +2,10 @@
 
 A high-performance circuit simulation tool.
 
-## 📦 Current Versions
+## 📦 Current Version
 
-**Release: v2.5**  
-*DC Solver v2*
+**Release: v3.0**  
+*AC Analyzer*
 
 ---
 
@@ -23,6 +23,17 @@ circuitSimulator/
 ---
 
 ## ✨ Release Notes
+
+### V3.0: AC Analysis Foundation ✅ COMPLETE
+- ✅ Templated Gauss-Seidel solver (`Gauss_seidel<T>`) for real/complex support
+- ✅ Templated `Component_contribution<T>` for DC/AC stamping
+- ✅ New `Ac_component` base class for frequency-dependent components
+- ✅ `Ac_analyzer` class for AC frequency sweep analysis
+- ✅ Complex-valued MNA system assembly and solving
+- ✅ Capacitor AC behavior: Admittance jωC
+- ✅ Inductor AC behavior: Admittance 1/(jωL)
+- ✅ Voltage source DC/AC parsing: `V1 1 0 DC 5 AC 3`
+- ✅ AC analysis frequency sweep with configurable range and step
 
 ### V2.5: DC Analysis ✅ COMPLETE
 - ✅ Enhanced Modified Gauss-Seidel Method solver (PIONEERED Again)
@@ -42,10 +53,10 @@ circuitSimulator/
 
 ### Core Components
 - ✅ **Resistors** - Linear resistive elements
-- ✅ **Voltage Sources** - Independent DC voltage sources
+- ✅ **Voltage Sources** - Independent DC/AC voltage sources
 - ✅ **Current Sources** - Independent DC current sources
-- ✅ **Inductors** - Short circuit at DC
-- ✅ **Capacitors** - Open circuit at DC
+- ✅ **Inductors** - Short circuit at DC, jωL impedance at AC
+- ✅ **Capacitors** - Open circuit at DC, 1/(jωC) impedance at AC
 
 ### Netlist Parsing
 - ✅ **SPICE-like Format** - Industry-standard syntax
@@ -54,6 +65,9 @@ circuitSimulator/
 - ✅ **Modified Nodal Analysis (MNA)** - Efficient matrix assembly
 - ✅ **DC Analysis Solver (OP)** - DC Operating Point Solver
   - ✅ **Modified Gauss-Seidel Solver (OP)** - Pioneered iterative solver for DC analysis
+- ✅ **AC Analysis Solver** - Frequency-domain analysis
+  - ✅ **Complex-valued Gauss-Seidel** - Templated solver for complex MNA systems
+  - ✅ **Frequency Sweep** - Configurable start/end frequency and step
 
 ### User Interface
 - ✅ **Command-Line Interface** - Flexible argument parsing
@@ -79,6 +93,7 @@ g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_netlist_parsing.cpp -o 
 g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_mna_assembly.cpp -o build/debug/test_mna_assembly.exe
 g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_dc_analysis.cpp -o build/debug/test_dc_analysis.exe
 g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_dc_analysis_lc.cpp -o build/debug/test_dc_analysis_lc.exe
+g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_ac_analysis.cpp -o build/debug/test_ac_analysis.exe
 ```
 
 ### Running the Simulator
@@ -115,7 +130,19 @@ g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_dc_analysis_lc.cpp -o b
 ./build/debug/test_mna_assembly.exe
 ./build/debug/test_dc_analysis.exe
 ./build/debug/test_dc_analysis_lc.exe
+./build/debug/test_ac_analysis.exe
 ```
+
+#### Test Suites
+
+| Test Suite | Description |
+|------------|-------------|
+| `test_components` | Unit tests for component classes (R, V, I, L, C) |
+| `test_netlist_parsing` | Netlist file parsing and circuit construction |
+| `test_mna_assembly` | MNA matrix/vector assembly validation |
+| `test_dc_analysis` | DC operating point analysis (voltage dividers, bridges, etc.) |
+| `test_dc_analysis_lc` | DC analysis with inductors and capacitors |
+| `test_ac_analysis` | AC frequency response (RC/RL filters, RLC resonance, phase) |
 
 ---
 
@@ -135,8 +162,10 @@ Range:   R > 0
 
 ### Voltage Source (V)
 ```
-Syntax:  V<name> <node+> <node-> <value>
-Example: V1 1 0 10
+Syntax:  V<name> <node+> <node-> [DC <dc_value>] [AC <ac_value>]
+Example: V1 1 0 10           (DC only)
+         V1 1 0 DC 5 AC 3    (DC and AC)
+         V1 1 0 AC 3 DC 5    (order doesn't matter)
 Units:   Volts (V)
 Range:   Any real number
 ```
@@ -279,22 +308,24 @@ R5 2 3 100
 | Class | File | Description |
 |-------|------|-------------|
 | `Circuit` | circuit.h/cpp | Main circuit container - holds nodes, components, MNA system |
-| `Simulator` | simulator.h/cpp | Orchestrates simulation runs (DC analysis) |
-| `Solver` | solver.h/cpp | Wrapper for linear system solving |
-| `Gauss_seidel` | gauss_seidel.h/cpp | Modified Gauss-Seidel iterative solver |
+| `Simulator` | simulator.h/cpp | Orchestrates simulation runs (DC/AC analysis) |
+| `Solver` | solver.h/cpp | Wrapper for linear system solving (DC and AC) |
+| `Gauss_seidel<T>` | gauss_seidel.h/cpp | Templated Modified Gauss-Seidel iterative solver |
+| `Ac_analyzer` | ac_analyzer.h/cpp | AC frequency sweep analysis and complex MNA assembly |
 | `Component` | component.h/cpp | Abstract base class for all circuit elements |
+| `Ac_component` | component.h/cpp | Abstract base for AC-capable components (C, L, V) |
 | `Node` | node.h/cpp | Represents circuit nodes with voltage |
-| `Component_contribution` | component_contribution.h/cpp | Stores MNA matrix/vector stamps |
+| `Component_contribution<T>` | component_contribution.h/cpp | Templated MNA matrix/vector stamps |
 
 ### Component Classes
 
-| Component | Class | Prefix | MNA Behavior |
-|-----------|-------|--------|--------------|
-| Resistor | `Resistor` | R | Conductance stamping (G matrix) |
-| Voltage Source | `Voltage_source` | V | Extra variable for branch current |
-| Current Source | `Current_source` | I | RHS vector stamping only |
-| Inductor | `Inductor` | L | Short circuit at DC (extra variable) |
-| Capacitor | `Capacitor` | C | Open circuit at DC (no contribution) |
+| Component | Class | Prefix | DC Behavior | AC Behavior |
+|-----------|-------|--------|-------------|-------------|
+| Resistor | `Resistor` | R | Conductance stamping (G matrix) | Same as DC |
+| Voltage Source | `Voltage_source` | V | Extra variable for branch current | Phasor voltage stamping |
+| Current Source | `Current_source` | I | RHS vector stamping only | (DC only) |
+| Inductor | `Inductor` | L | Short circuit (extra variable) | Admittance 1/(jωL) |
+| Capacitor | `Capacitor` | C | Open circuit (no contribution) | Admittance jωC |
 
 ---
 
@@ -365,6 +396,25 @@ I_VS(ID)        Current
 I_VS(V1)     0.010000 A
 ```
 
+### AC Analysis Output (CSV)
+AC analysis results are logged to a CSV file (default: `ac_analysis_results.csv`).
+The output path can be configured via the `Simulator` constructor.
+
+```csv
+Frequency(Hz), R(x[0]), I(x[0]), R(x[1]), I(x[1]), ..., Converge_Iters, Duration_us
+0, (0,0), (10,0), (5,0), 0, 0
+1000, (0,0), (9.95,-0.31), (4.97,-0.16), 15, 42
+...
+```
+
+| Column | Description |
+|--------|-------------|
+| `Frequency(Hz)` | Analysis frequency in Hertz |
+| `R(x[n])` | Real part of phasor var n |
+| `I(x[n])` | Imaginary part of var n |
+| `Converge_Iters` | Iterations to convergence at this frequency |
+| `Duration_us` | Solve time in microseconds |
+
 ---
 
 ## 🗺️ Development Roadmap
@@ -428,9 +478,11 @@ I_VS(V1)     0.010000 A
 
 ### Deliverables:
 
-- ⬜ AC sweep from fmin to fmax
-- ⬜ Filter response (low-pass, high-pass, band-pass)
-- ⬜ Gain and phase output
+- ✅ AC sweep from fmin to fmax (implemented via `run_ac_analysis()`)
+- ✅ Complex MNA system assembly and solving
+- ✅ Templated solver for real/complex support
+- ⚬ Filter response (low-pass, high-pass, band-pass) - *in progress*
+- ⚬ Gain and phase output - *output format enhancement needed*
 - ⬜ Input/output impedance calculation
 
 ## ⚡ Phase 4: Transient Analysis

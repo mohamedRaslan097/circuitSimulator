@@ -5,6 +5,8 @@
  * Implements the Gauss-Seidel iterative method with enhancements for
  * handling zero diagonal elements (common in MNA systems with voltage
  * sources and inductors).
+ * 
+ * @tparam T Numeric type for matrix/vector elements (double or std::complex<double>)
  */
 
 #ifndef GAUSS_SEIDEL_H
@@ -13,6 +15,8 @@
 #include <unordered_map>
 #include <vector>
 #include <set>
+#include <complex>
+#include <cmath>
 #include "I_Printable.h"
 
 /**
@@ -25,6 +29,7 @@
  * source and inductor stamps. This is done efficently on sparse matrix
  *  through independent target tracking.
  * 
+ * @tparam T Numeric type (default: double, can be std::complex<double> for AC analysis)
  * 
  * **Algorithm:**
  * For system Ax = b, iterate until convergence:
@@ -54,8 +59,10 @@
  * 
  * @see Solver
  */
+template<typename T = double>
 class Gauss_seidel : public I_Printable {
-    friend class Solver;  // Solver class has access to internal state
+    template<typename U> friend class Solver_base;
+    friend class Solver;
     
 private:
     int max_iter;           // Maximum number of iterations allowed
@@ -65,7 +72,7 @@ private:
     bool converged;         // Flag indicating successful convergence
 
     // Internal state for zero-diagonal handling
-    std::vector<double> lhs_values;             // Stored LHS coefficients for zero-diagonal rows
+    std::vector<T> lhs_values;                  // Stored LHS coefficients for zero-diagonal rows
     std::vector<int> targets;                   // Target variable indices for each row
     std::vector<int> var_to_target;             // Map variable index to row index
     std::set<int> independent_targets;          // Variables that need special handling
@@ -85,7 +92,7 @@ private:
      * element is zero.
      */
     void handle_zero_diagonal(int row, 
-                              const std::unordered_map<int, double>& col_map);
+                              const std::unordered_map<int, T>& col_map);
     
     /**
      * @brief Computes the updated value for a single row.
@@ -95,10 +102,10 @@ private:
      * @param solution Current solution vector (updated in place).
      * @return The computed residual for this row.
      */
-    double compute_row_update(int row,
-                              const std::unordered_map<int, double>& col_map,
-                              const std::unordered_map<int, double>& mna_vector,
-                              std::vector<double>& solution);
+    T compute_row_update(int row,
+                         const std::unordered_map<int, T>& col_map,
+                         const std::unordered_map<int, T>& mna_vector,
+                         std::vector<T>& solution);
     
     /**
      * @brief Checks if the solution has converged.
@@ -106,7 +113,7 @@ private:
      * @param size System dimension.
      * @return true if relative residual is below tolerance.
      */
-    bool check_convergence(const std::unordered_map<int, double>& mna_vector,
+    bool check_convergence(const std::unordered_map<int, T>& mna_vector,
                            size_t size);
 
 public:
@@ -138,9 +145,9 @@ public:
      * @par Space Complexity
      * O(N) for internal vectors (lhs_values, targets)
      */
-    void dc_solve(const std::unordered_map<int, std::unordered_map<int, double>>& mna_matrix,
-               const std::unordered_map<int, double>& mna_vector,
-               std::vector<double>& solution);
+    void solve(const std::unordered_map<int, std::unordered_map<int, T>>& mna_matrix,
+                  const std::unordered_map<int, T>& mna_vector,
+                  std::vector<T>& solution);
     
     /**
      * @brief Prints solver configuration and convergence information.
@@ -148,5 +155,9 @@ public:
      */
     virtual void print(std::ostream& os = std::cout) const override;
 };
+
+// Explicit template instantiation declarations
+extern template class Gauss_seidel<double>;
+extern template class Gauss_seidel<std::complex<double>>;
 
 #endif

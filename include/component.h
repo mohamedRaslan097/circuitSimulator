@@ -64,8 +64,6 @@ public:
      * @brief Gets the voltage drop across the component.
      * @return Voltage difference (Voltage drop) in Volts.
      * @throws std::runtime_error if node voltages are not valid.
-     * 
-     * @note For voltage sources, returns the source voltage value.
      */
     virtual double get_voltage_drop() = 0;
     
@@ -73,8 +71,6 @@ public:
      * @brief Gets the current flowing through the component.
      * @return Current in Amperes (positive from ni to nj).
      * @throws std::runtime_error if circuit has not been solved.
-     * 
-     * @note For current sources, returns the source current value.
      */
     virtual double get_current() = 0;
     
@@ -89,7 +85,7 @@ public:
      * - Inductors: Short circuit in DC (±1 stamps like voltage source)
      * - Capacitors: Open circuit in DC (no contribution)
      */
-    virtual Component_contribution get_contribution() = 0;
+    virtual Component_contribution<double> get_contribution() = 0;
     
     /**
      * @brief Destructor.
@@ -97,5 +93,27 @@ public:
      */
     ~Component();
 };
+
+class Ac_component : public Component {
+public:
+    static constexpr double PI = 3.14159265358979323846;
+    /**
+     * @brief Constructs an AC-capable component between two nodes.
+     * @param id Unique identifier string (e.g., "R1", "V1", "C1").
+     * @param node_i Pointer to the positive terminal node.
+     * @param node_j Pointer to the negative terminal node.
+     */
+    Ac_component(const std::string& id, Node* node_i, Node* node_j);
+
+    /**
+     * @brief Generates AC MNA contributions for this component.
+     * @return Component_contribution containing AC matrix and vector stamps.
+     * 
+     * Each AC-capable component type has a specific stamping pattern
+     * for AC analysis, which may differ from DC stamping.
+     */
+    virtual Component_contribution<std::complex<double>> get_ac_contribution(double frequency) = 0;
+};
+
 
 #endif

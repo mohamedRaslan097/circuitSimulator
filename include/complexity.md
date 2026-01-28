@@ -11,6 +11,7 @@ This document provides a comprehensive analysis of time and space complexity for
   - [Simulator](#simulator)
   - [Solver](#solver)
   - [Gauss_seidel](#gauss_seidel)
+  - [Ac_analyzer](#ac_analyzer)
 - [Component Classes](#component-classes)
 - [Helper Classes](#helper-classes)
 - [Overall Analysis Pipeline](#overall-analysis-pipeline)
@@ -28,6 +29,7 @@ This document provides a comprehensive analysis of time and space complexity for
 | **NNZ** | Number of non-zero entries in MNA matrix |
 | **K** | Average non-zeros per row (typically ≤ 5 for circuits) |
 | **I** | Number of iterations until convergence |
+| **F** | Number of frequency points in AC sweep |
 | **L** | Number of lines in netlist file |
 | **S** | Average string/line length |
 
@@ -55,6 +57,14 @@ This document provides a comprehensive analysis of time and space complexity for
 | `var_to_target` | `vector<int>` | O(M) | Inverse mapping: variable → which row solves it |
 | `independent_targets` | `set<int>` | O(V) | Tracks variables uniquely determined by one row |
 | `solution` | `vector<double>` | O(M) | Solution vector |
+
+### AC Analysis Storage (Ac_analyzer)
+
+| Structure | Type | Space Complexity | Description |
+|-----------|------|------------------|-------------|
+| `mna_matrix` | `unordered_map<int, unordered_map<int, complex<double>>>` | O(NNZ) | Complex sparse MNA matrix |
+| `mna_vector` | `unordered_map<int, complex<double>>` | O(M) | Complex RHS vector |
+| `solution` | `vector<complex<double>>` | O(M) | Complex solution vector |
 
 ---
 
@@ -123,7 +133,7 @@ Orchestrates the complete analysis pipeline.
 | Method | Time Complexity | Space Complexity | Notes |
 |--------|-----------------|------------------|-------|
 | `Simulator()` | O(1) | O(1) | Default constructs Solver |
-| **`run_dc_analysis()`** | **O(I × R × K)** | **O(M)** | Dominated by `dc_solve()` |
+| **`run_dc_analysis()`** | **O(I × R × K)** | **O(M)** | Dominated by `solve()` |
 | `print()` | O(M) | O(1) | Iterates solution vector |
 
 #### run_dc_analysis() Implementation
@@ -145,7 +155,7 @@ High-level wrapper for the linear system solver.
 | Method | Time Complexity | Space Complexity | Notes |
 |--------|-----------------|------------------|-------|
 | `Solver()` | O(1) | O(1) | Initializes Gauss-Seidel parameters |
-| **`solve_MNA_system()`** | **O(M) + O(I × R × K)** | **O(M)** | Resize + dc_solve |
+| **`solve_MNA_system()`** | **O(M) + O(I × R × K)** | **O(M)** | Resize + solve |
 | `print()` | O(1) | O(1) | Prints timing info |
 
 #### solve_MNA_system() Implementation
@@ -155,7 +165,7 @@ High-level wrapper for the linear system solver.
 void Solver::solve_MNA_system(...) {
     solution.resize(mna_matrix.size() + 1, 0.0);  // O(M) - allocates & zero-initializes
     auto start = high_resolution_clock::now();
-    gauss_seidel.dc_solve(mna_matrix, mna_vector, solution);  // O(I × R × K)
+    gauss_seidel.solve(mna_matrix, mna_vector, solution);  // O(I × R × K)
     auto end = high_resolution_clock::now();
     duration = duration_cast<microseconds>(end - start);
 }
@@ -172,10 +182,10 @@ The core iterative solver implementation with dynamic pivoting for zero-diagonal
 | `handle_zero_diagonal()` | O(K) | O(1) | Iterates row's non-zeros; O(log V) for `independent_targets.find/insert` |
 | `compute_row_update()` | O(K) | O(1) | Iterates row's non-zeros + one RHS lookup |
 | `check_convergence()` | O(M) | O(1) | Compares all `lhs_values[i]` vs `mna_vector[i]` |
-| **`dc_solve()`** | **O(I × R × K)** | **O(M)** | R = MNA matrix rows (may be < M due to sparse storage) |
+| **`solve()`** | **O(I × R × K)** | **O(M)** | R = MNA matrix rows (may be < M due to sparse storage) |
 | `print()` | O(1) | O(1) | Prints convergence info |
 
-#### dc_solve() Detailed Analysis (Based on Implementation)
+#### solve() Detailed Analysis (Based on Implementation)
 
 ```cpp
 // From gauss_seidel.cpp:
@@ -199,6 +209,31 @@ for (converge_iters = 1; converge_iters < max_iter; converge_iters++) {
 
 **Note:** Convergence is checked every 5 iterations (optimization), reducing overhead.
 
+### Ac_analyzer
+
+Handles AC frequency sweep analysis with complex-valued MNA systems.
+
+| Method | Time Complexity | Space Complexity | Notes |
+|--------|-----------------|------------------|-------|
+| `Ac_analyzer()` | O(1) | O(1) | Sets output file path |
+| `initialize()` | O(NNZ) | O(NNZ) | Converts real MNA to complex, filters extra vars |
+| `assemble_ac_mna_system()` | O(A × S) | O(1) | A = AC components, S = stamps per component |
+| `log_ac_inst_solution()` | O(M) | O(1) | Writes solution to file |
+| `print()` | O(1) | O(1) | Prints configuration |
+
+#### AC Analysis Workflow
+
+```cpp
+// Per frequency point:
+for (freq = freq1; freq <= freq2; freq += step) {
+    ac_analyzer.assemble_ac_mna_system(ac_components, freq);  // O(A × S)
+    gauss_seidel_ac.solve(mna_matrix, mna_vector, solution);  // O(I × R × K)
+    ac_analyzer.log_ac_inst_solution(freq, duration);         // O(M)
+}
+```
+
+**Total AC Analysis: O(F × (A × S + I × R × K + M))** where F = frequency points
+
 ---
 
 ## Component Classes
@@ -213,12 +248,20 @@ All component classes inherit from `Component` and implement `get_contribution()
 | `Inductor` | O(1) | O(1) | 2-4 (depends on ground) | 0 |
 | `Capacitor` | O(1) | O(1) | 0 (open circuit in DC) | 0 |
 
+### AC Component Contributions
+
+| Class | `get_ac_contribution()` Time | Matrix Stamps | Notes |
+|-------|------------------------------|---------------|-------|
+| `Capacitor` | O(1) | 2-4 | Admittance jωC stamping |
+| `Inductor` | O(1) | 2-4 | Admittance 1/(jωL) stamping |
+| `Voltage_source` | O(1) | 2-4 + 1 vector | Phasor voltage stamping |
+
 #### Resistor::get_contribution() Implementation
 
 ```cpp
 // From resistor.cpp - stamps depend on whether nodes are ground:
-Component_contribution Resistor::get_contribution() {
-    Component_contribution contribution;
+Component_contribution<double> Resistor::get_contribution() {
+    Component_contribution<double> contribution;
     double conductance = 1.0 / resistance;
     if (ni->id != 0)                                    // Skip if positive node is ground
         contribution.stampMatrix(ni->id, ni->id, conductance);
@@ -282,7 +325,7 @@ Component_contribution Resistor::get_contribution() {
 3. Simulator::run_dc_analysis()   → O(I × R × K)   Space: O(M)
    ├─ Solver::solve_MNA_system()
    │  ├─ solution.resize()        → O(M)
-   │  └─ Gauss_seidel::dc_solve()
+   │  └─ Gauss_seidel::solve()
    │     ├─ initialize()          → O(M)
    │     └─ iterate until convergence:
    │        ├─ process each row   → O(R × K) per iteration
@@ -290,12 +333,31 @@ Component_contribution Resistor::get_contribution() {
    └─ Circuit::deploy_dc_solution() → O(M)
 ```
 
+### Complete AC Analysis Workflow
+
+```
+4. Simulator::run_ac_analysis()   → O(F × I × R × K)  Space: O(NNZ + M)
+   ├─ Solver::assemble_ac_system()
+   │  └─ Ac_analyzer::initialize() → O(NNZ) - convert real to complex
+   └─ Solver::solve_ac_system()   → O(F × (A × S + I × R × K))
+      └─ for each frequency:
+         ├─ assemble_ac_mna_system() → O(A × S)
+         ├─ gauss_seidel_ac.solve()  → O(I × R × K)
+         └─ log_ac_inst_solution()   → O(M)
+```
+
 ### Total Complexity
 
-| Metric | Complexity | Dominant Factor |
-|--------|------------|-----------------|
-| **Time** | O(L + C + I×R×K + M) | **O(I × R × K)** (solver iterations) |
-| **Space** | O(N + C + NNZ + M) | **O(NNZ + M)** (MNA matrix + solver state) |
+| Analysis | Time Complexity | Dominant Factor |
+|----------|-----------------|------------------|
+| **DC Only** | O(L + C + I×R×K + M) | **O(I × R × K)** (solver iterations) |
+| **AC Only** | O(F × (A×S + I×R×K + M)) | **O(F × I × R × K)** (F frequency points) |
+| **DC + AC** | O(L + C + (1+F) × I×R×K) | **O(F × I × R × K)** |
+
+| Metric | Space Complexity | Notes |
+|--------|-----------------|-------|
+| **DC** | O(N + C + NNZ + M) | Real-valued |
+| **AC** | O(N + C + 2×NNZ + 2×M) | Complex values = 2× storage |
 
 Where:
 - **R** = rows in MNA matrix (typically R ≈ N + V, but stored sparsely)

@@ -24,11 +24,9 @@
  * open circuits with zero current flow. The capacitor contributes
  * nothing to the MNA system in DC analysis.
  * 
- * **Transient Analysis (Future):**
- * For transient analysis, capacitors would be modeled using companion
- * models (e.g., parallel RC circuit using backward Euler).
- * 
- * @note Currently only DC analysis is supported, where capacitors are open circuits.
+ * **AC Analysis Behavior:**
+ * In AC analysis, the capacitor contributes an impedance of 1/(jωC),
+ * where ω = 2πf.
  * 
  * @see Component, Component_contribution
  * 
@@ -39,13 +37,14 @@
  * Capacitor c("C1", n1, n2, 1e-6);  // 1µF capacitor
  * @endcode
  */
-class Capacitor : public Component {
+class Capacitor : public Ac_component {
 public:
     static constexpr const char* default_id = "C";      // Default prefix for capacitor IDs
     static constexpr const char* type = "Capacitor";    // Component type name for display
     
 protected:
-    double capacitance;  // Capacitance value in Farads (F)
+    double capacitance;                 // Capacitance value in Farads (F)
+    std::complex<double> admittance;    // Admittance equivalent for AC analysis (jωC)
     
 public:
     /**
@@ -74,7 +73,17 @@ public:
      * @brief Generates MNA contributions (empty for DC analysis).
      * @return Empty Component_contribution (capacitor is open circuit in DC).
      */
-    virtual Component_contribution get_contribution() override;
+    virtual Component_contribution<double> get_contribution() override;
+
+    /**
+     * @brief Generates AC MNA contributions for the capacitor.
+     * @param frequency AC analysis frequency in Hertz.
+     * @return Component_contribution with capacitive reactance stamps.
+     * 
+     * In AC analysis, the capacitor contributes an impedance of 1/(jωC),
+     * where ω = 2πf. The stamping pattern differs from DC analysis.
+     */
+    virtual Component_contribution<std::complex<double>> get_ac_contribution(double frequency) override;
 
     /**
      * @brief Prints capacitor information.

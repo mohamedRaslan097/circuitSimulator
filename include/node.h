@@ -27,7 +27,6 @@
  * 
  * @example
  * @code
- * Node ground("0");      // Ground node, id=0
  * Node vcc("VCC");       // Power supply node, id=1
  * Node output("OUT");    // Output node, id=2
  * @endcode

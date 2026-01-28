@@ -46,7 +46,7 @@
  * Voltage_source vs("V1", n1, ground, 5.0);  // 5V source
  * @endcode
  */
-class Voltage_source : public Component {
+class Voltage_source : public Ac_component {
 public:
     static constexpr const char* default_id = "V";          // Default prefix for voltage source IDs
     static constexpr const char* stamping_id = "I";         // Prefix for current variable in extraVarId_map
@@ -55,6 +55,7 @@ public:
 protected:
     int vc_id;      // Index for the source current variable in MNA system
     double voltage; // Source voltage in Volts (V)
+    double signal_voltage; // Signal voltage for AC analysis in Volts (V)
     double current; // Computed current through the source in Amperes
     
 public:
@@ -67,7 +68,7 @@ public:
      * 
      * @note Automatically allocates an extra variable ID (vc_id) for the source current.
      */
-    Voltage_source(const std::string& id, Node* ni, Node* nj, double v = 0);
+    Voltage_source(const std::string& id, Node* ni, Node* nj, double v1 = 0, double v2 = 0);
     
     /**
      * @brief Constructs a voltage source with auto-generated ID.
@@ -96,8 +97,18 @@ public:
      * @brief Generates MNA contributions for the voltage source.
      * @return Component_contribution with standard voltage source stamps.
      */
-    virtual Component_contribution get_contribution() override;
+    virtual Component_contribution<double> get_contribution() override;
     
+    /**
+     * @brief Generates AC MNA contributions for the voltage source.
+     * @param frequency AC analysis frequency in Hertz.
+     * @return Component_contribution with AC voltage source stamps.
+     * 
+     * In AC analysis, the voltage source contributes a phasor voltage
+     * equal to its signal_voltage at the specified frequency.
+     */
+    virtual Component_contribution<std::complex<double>> get_ac_contribution(double frequency) override;
+
     /**
      * @brief Prints voltage source information.
      * @param os Output stream (default: std::cout).

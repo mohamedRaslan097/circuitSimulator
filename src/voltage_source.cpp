@@ -1,6 +1,6 @@
 #include "voltage_source.h"
 
-Voltage_source::Voltage_source(const std::string& id, Node* ni, Node* nj, double v) : Component(id, ni, nj),vc_id(Node::node_count++), voltage(v), current(0) {}
+Voltage_source::Voltage_source(const std::string& id, Node* ni, Node* nj, double v1, double v2) : Ac_component(id, ni, nj),vc_id(Node::node_count++), voltage(v1), signal_voltage(v2), current(0) {}
 
 double Voltage_source::get_voltage_drop() {return voltage;}
 
@@ -13,8 +13,8 @@ void Voltage_source::print(std::ostream& os) const {
        << std::right << std::fixed << std::setprecision(4) << std::setw(12) << voltage << " V" << std::endl;
 }
 
-Component_contribution Voltage_source::get_contribution(){
-    Component_contribution contribution;
+Component_contribution<double> Voltage_source::get_contribution(){
+    Component_contribution<double> contribution;
     if(ni->id != 0){
         contribution.stampMatrix(ni->id, vc_id, 1.0);
         contribution.stampMatrix(vc_id, ni->id, 1.0);
@@ -24,5 +24,24 @@ Component_contribution Voltage_source::get_contribution(){
         contribution.stampMatrix(vc_id, nj->id, -1.0);
     }
     contribution.stampVector(vc_id, voltage);
+    return contribution;
+}
+
+Component_contribution<std::complex<double>> Voltage_source::get_ac_contribution(double frequency){
+    Component_contribution<std::complex<double>> contribution;
+    if(frequency != 0.0)
+        return contribution;
+
+    if(ni->id != 0){
+        contribution.stampMatrix(ni->id, vc_id, 1.0);
+        contribution.stampMatrix(vc_id, ni->id, 1.0);
+    }
+    if(nj->id != 0){
+        contribution.stampMatrix(nj->id, vc_id, -1.0);
+        contribution.stampMatrix(vc_id, nj->id, -1.0);
+    }
+    if(signal_voltage != 0.0)
+        contribution.stampVector(vc_id, std::complex<double>(signal_voltage, 0.0));
+    
     return contribution;
 }

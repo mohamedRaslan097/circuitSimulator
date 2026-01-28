@@ -18,8 +18,8 @@ void Current_source::print(std::ostream& os) const {
        << std::right << std::fixed << std::setprecision(4) << std::setw(12) << displayValue << " mA" << std::endl;
 }
 
-Component_contribution Current_source::get_contribution(){
-    Component_contribution contribution;
+Component_contribution<double> Current_source::get_contribution(){
+    Component_contribution<double> contribution;
     if(ni->id != 0){
         contribution.stampVector(ni->id, -current);
     }

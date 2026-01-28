@@ -47,16 +47,17 @@
  * Inductor l("L1", n1, n2, 1e-3);  // 1mH inductor
  * @endcode
  */
-class Inductor : public Component {
+class Inductor : public Ac_component {
 public:
     static constexpr const char* default_id = "L";      // Default prefix for inductor IDs
     static constexpr const char* stamping_id = "I";     // Prefix for current variable in extraVarId_map
     static constexpr const char* type = "Inductor";     // Component type name for display
     
 protected:
-    int vc_id;          // Index for the inductor current variable in MNA system
-    double inductance;  // Inductance value in Henries (H)
-    double current;     // Computed current through the inductor in Amperes
+    int vc_id;                          // Index for the inductor current variable in MNA system
+    double inductance;                  // Inductance value in Henries (H)
+    std::complex<double> admittance;    // Admittance equivalent for AC analysis (1/jωL)
+    double current;                     // Computed current through the inductor in Amperes
     
 public:
     /**
@@ -86,7 +87,17 @@ public:
      * @brief Generates MNA contributions for DC short circuit model.
      * @return Component_contribution with voltage source-like stamps (V=0).
      */
-    virtual Component_contribution get_contribution() override;
+    virtual Component_contribution<double> get_contribution() override;
+
+    /**
+     * @brief Generates AC MNA contributions for the inductor.
+     * @param frequency AC analysis frequency in Hertz.
+     * @return Component_contribution with inductive reactance stamps.
+     * 
+     * In AC analysis, the inductor contributes an impedance of jωL,
+     * where ω = 2πf. The stamping pattern differs from DC analysis.
+     */
+    virtual Component_contribution<std::complex<double>> get_ac_contribution(double frequency) override;
 
     /**
      * @brief Gets the extra variable index for inductor current.

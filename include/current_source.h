@@ -84,7 +84,7 @@ public:
      * @brief Generates MNA contributions (vector stamps only).
      * @return Component_contribution with current stamps to RHS vector.
      */
-    virtual Component_contribution get_contribution() override;
+    virtual Component_contribution<double> get_contribution() override;
     
     /**
      * @brief Prints current source information.

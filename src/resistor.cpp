@@ -21,8 +21,8 @@ void Resistor::print(std::ostream& os) const {
        << std::right << std::fixed << std::setprecision(4) << std::setw(12) << displayValue << " kΩ" << std::endl;
 }
 
-Component_contribution Resistor::get_contribution(){
-    Component_contribution contribution;
+Component_contribution<double> Resistor::get_contribution(){
+    Component_contribution<double> contribution;
     double conductance = 1.0 / resistance;
     if(ni->id != 0)
         contribution.stampMatrix(ni->id, ni->id, conductance);

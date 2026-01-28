@@ -11,6 +11,9 @@ Circuit::~Circuit() {
     for (auto& pair : nodes) {
         delete pair.second;
     }
+    for (auto& pair : ac_components) {
+        pair.second = nullptr; // Prevent double deletion
+    }
     for (auto& pair : components) {
         delete pair.second;
     }
@@ -38,11 +41,12 @@ void Circuit::add_resistor(std::string& resistorId, std::string& node1, std::str
     }
 }
 
-void Circuit::add_voltage_source(std::string& voltageSourceId, std::string& node1, std::string& node2, double voltage) {
+void Circuit::add_voltage_source(std::string& voltageSourceId, std::string& node1, std::string& node2, double dc_voltage, double ac_voltage) {
     if(components.find(voltageSourceId) == components.end()) {
-        Voltage_source* voltageSource = new Voltage_source(voltageSourceId, nodes[node1], nodes[node2], voltage);
+        Voltage_source* voltageSource = new Voltage_source(voltageSourceId, nodes[node1], nodes[node2], dc_voltage, ac_voltage);
         components[voltageSourceId] = voltageSource;
         extraVarId_map[voltageSource->get_vc_id()] = Voltage_source::stamping_id + voltageSourceId;
+        ac_components[voltageSourceId] = voltageSource;
     } else {
         throw std::runtime_error("Voltage source with ID " + voltageSourceId + " already exists in the circuit.");
     }
@@ -62,6 +66,7 @@ void Circuit::add_inductor(std::string& inductorId, std::string& node1, std::str
         Inductor* inductor = new Inductor(inductorId, nodes[node1], nodes[node2], inductance);
         components[inductorId] = inductor;
         extraVarId_map[inductor->get_vc_id()] = Inductor::stamping_id + inductorId;
+        ac_components[inductorId] = inductor;
     } else {
         throw std::runtime_error("Inductor with ID " + inductorId + " already exists in the circuit.");
     }
@@ -71,8 +76,28 @@ void Circuit::add_capacitor(std::string& capacitorId, std::string& node1, std::s
     if(components.find(capacitorId) == components.end()) {
         Capacitor* capacitor = new Capacitor(capacitorId, nodes[node1], nodes[node2], capacitance);
         components[capacitorId] = capacitor;
+        ac_components[capacitorId] = capacitor;
     } else {
         throw std::runtime_error("Capacitor with ID " + capacitorId + " already exists in the circuit.");
+    }
+}
+
+void Circuit::parse_voltage_source_values(std::istringstream& iss, double& dc_value, double& ac_value) {
+    dc_value = 0;
+    ac_value = 0;
+    std::string token;
+    
+    while(iss >> token) {
+        if(token.size() >= 2 && token[0] == '/' && token[1] == '/') break; // Inline comment
+        if(token.size() >= 2 && toupper(token[0]) == 'D' && toupper(token[1]) == 'C') {
+            if(!(iss >> dc_value))
+                throw std::runtime_error("Error parsing DC value for voltage source");
+        } else if(token.size() >= 2 && toupper(token[0]) == 'A' && toupper(token[1]) == 'C') {
+            if(!(iss >> ac_value))
+                throw std::runtime_error("Error parsing AC value for voltage source");
+        } else {
+            dc_value = std::stod(token); // Plain number = DC value
+        }
     }
 }
 
@@ -93,45 +118,50 @@ void Circuit::parse_netlist(const std::string& filename) {
     else
         file.seekg(original_pos);
 
-    std::string component_id;
-    std::string node1_id;
-    std::string node2_id;
-    double value;
+    std::string line;
     
-    while (file >> component_id)
+    while (std::getline(file, line))
     {
-        if(component_id[0] == '*')
-        {
-            std::string comment_line;
-            getline(file, comment_line);
-            continue;
-        }
+        std::istringstream iss(line);
+        std::string component_id;
         
-        if(!(file >> node1_id >> node2_id >> value))
+        if(!(iss >> component_id)) continue; // Empty line
+        if(component_id[0] == '*') continue; // Comment line
+        
+        std::string node1_id, node2_id;
+        if(!(iss >> node1_id >> node2_id))
             throw std::runtime_error("Error parsing netlist line for component: " + component_id);
         
         add_node(node1_id);
         add_node(node2_id);
         
-        if(toupper(component_id[0]) == Resistor::default_id[0])
-            add_resistor(component_id, node1_id, node2_id, value);
-        else if(toupper(component_id[0]) == Voltage_source::default_id[0])
-            add_voltage_source(component_id, node1_id, node2_id, value);
-        else if(toupper(component_id[0]) == Current_source::default_id[0])
-            add_current_source(component_id, node1_id, node2_id, value);
-        else if(toupper(component_id[0]) == Inductor::default_id[0])
-            add_inductor(component_id, node1_id, node2_id, value);
-        else if(toupper(component_id[0]) == Capacitor::default_id[0])
-            add_capacitor(component_id, node1_id, node2_id, value);
-        else
-            throw std::runtime_error("Unknown component type in netlist: " + component_id);
+        if(toupper(component_id[0]) == Voltage_source::default_id[0]) {
+            double dc_value, ac_value;
+            parse_voltage_source_values(iss, dc_value, ac_value);
+            add_voltage_source(component_id, node1_id, node2_id, dc_value, ac_value);
+        } else {
+            double value;
+            if(!(iss >> value))
+                throw std::runtime_error("Error parsing value for: " + component_id);
+            
+            if(toupper(component_id[0]) == Resistor::default_id[0])
+                add_resistor(component_id, node1_id, node2_id, value);
+            else if(toupper(component_id[0]) == Current_source::default_id[0])
+                add_current_source(component_id, node1_id, node2_id, value);
+            else if(toupper(component_id[0]) == Inductor::default_id[0])
+                add_inductor(component_id, node1_id, node2_id, value);
+            else if(toupper(component_id[0]) == Capacitor::default_id[0])
+                add_capacitor(component_id, node1_id, node2_id, value);
+            else
+                throw std::runtime_error("Unknown component type in netlist: " + component_id);
+        }
     }
 }
 
 void Circuit::assemble_MNA_system() {
     mna_matrix.clear();
     for(const auto& component : components) {
-        Component_contribution contrib = component.second->get_contribution();
+        Component_contribution<double> contrib = component.second->get_contribution();
 
         for(const auto& mc : contrib.matrixStamps)
             mna_matrix[mc.row][mc.col] += mc.value;

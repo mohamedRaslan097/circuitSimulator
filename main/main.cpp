@@ -20,8 +20,9 @@ int main(int argc, char* argv[]) {
     circuit.assemble_MNA_system();
     
     // Run simulation
-    Simulator simulator;
+    Simulator simulator(ui.get_ac_output_file());
     simulator.run_dc_analysis(circuit);
+    simulator.run_ac_analysis(circuit, 1, 100000, 10, true); // 1Hz to 100kHz, log scale
     
     // Generate output
     stringstream ss;

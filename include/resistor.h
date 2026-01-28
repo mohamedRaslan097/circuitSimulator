@@ -84,7 +84,7 @@ public:
      * @brief Generates conductance stamps for the MNA matrix.
      * @return Component_contribution with conductance stamp pattern.
      */
-    virtual Component_contribution get_contribution() override;
+    virtual Component_contribution<double> get_contribution() override;
     
     /**
      * @brief Prints resistor information.

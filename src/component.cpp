@@ -7,3 +7,5 @@ Component::Component(const Component& src) : ni(src.ni), nj(src.nj), componentId
 Component::Component(Component&& src) : ni(src.ni), nj(src.nj), componentId(src.componentId) {src.ni = src.nj = nullptr;}
 
 Component::~Component(){ni = nj = nullptr;}
+
+Ac_component::Ac_component(const std::string& id, Node* node_i, Node* node_j) : Component(id, node_i, node_j) {}

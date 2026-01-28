@@ -4,13 +4,15 @@ UI::UI() : input_file(""), output_file("output.log"), verbose(false), pause(fals
 
 bool UI::parse_arguments(int argc, char* argv[]) {
     program_name = argv[0];
-    
+    ac_output_file = "ac_analysis_results.csv";
     for(int i = 1; i < argc; i++) {
         std::string arg = argv[i];
         if(arg == "-i" && i + 1 < argc) {
             input_file = argv[++i];
         } else if(arg == "-o" && i + 1 < argc) {
             output_file = argv[++i];
+        } else if(arg == "-ac_csv" && i + 1 < argc) {
+            ac_output_file = argv[++i];
         } else if(arg == "-h") {
             print_usage();
             return false;
@@ -36,16 +38,17 @@ bool UI::parse_arguments(int argc, char* argv[]) {
 }
 
 void UI::print_usage() const {
-    std::cout << "Usage: " << program_name << " -i input_file [-o output.log] [-v]" << std::endl;
-    std::cout << "  -i <file>   Input netlist file (required)" << std::endl;
-    std::cout << "  -o <file>   Output results file (default: output.log)" << std::endl;
-    std::cout << "  -v          Verbose mode" << std::endl;
-    std::cout << "  -h          Show help" << std::endl;
+    std::cout << "Usage: " << program_name << " -i input_file [-o output.log] [-ac_csv ac_analysis_results.csv] [-v]" << std::endl;
+    std::cout << "  -i <file>       Input netlist file (required)" << std::endl;
+    std::cout << "  -o <file>       Output results file (default: output.log)" << std::endl;
+    std::cout << "  -ac_csv <file>  AC analysis results CSV file (default: ac_analysis_results.csv)" << std::endl;
+    std::cout << "  -v              Verbose mode" << std::endl;
+    std::cout << "  -h              Show help" << std::endl;
 }
 
 void UI::print_banner(std::ostream& os) const {
     os << "╔════════════════════════════════════╗\n"
-       << "║   Circuit Simulator v2.5           ║\n"
+       << "║   Circuit Simulator v3.0           ║\n"
        << "║     DC Solver                      ║\n"
        << "╚════════════════════════════════════╝\n\n";
 }

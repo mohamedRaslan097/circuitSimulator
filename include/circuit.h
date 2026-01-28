@@ -12,11 +12,13 @@
 
 #include <unordered_map>
 #include <map>
+#include <sstream>
 #include "Resistor.h"
 #include "voltage_source.h"
 #include "current_source.h"
 #include "inductor.h"
 #include "capacitor.h"
+#include "ac_analyzer.h"
 
 /**
  * @class Circuit
@@ -59,29 +61,33 @@
  * @endcode
  */
 class Circuit : public I_Printable {
+    friend void Ac_analyzer::log_ac_inst_solution(double frequency, std::chrono::microseconds duration, int converge_iters);
 private:
     static constexpr const char* default_name = "Circuit";  // Default circuit name
     
 protected:
-    /// Map of node names to Node pointers
+    // Map of node names to Node pointers
     std::unordered_map<std::string, Node*> nodes;
     
-    /// Ordered map of node IDs to names (for iteration in order)
+    // Ordered map of node IDs to names (for iteration in order)
     std::map<int,std::string> nodeId_map;
 
-    /// Map of component IDs to Component pointers
+    // Map of component IDs to Component pointers
     std::unordered_map<std::string, Component*> components;
     
-    /// Map of extra variable IDs to names (for voltage source/inductor currents)
+    // Map of ac component IDs to Component pointers
+    std::unordered_map<std::string, Component*> ac_components;
+
+    // Map of extra variable IDs to names (for voltage source/inductor currents)
     std::map<int,std::string> extraVarId_map;
 
-    /// MNA system matrix A (sparse representation using nested maps)
+    // MNA system matrix A (sparse representation using nested maps)
     std::unordered_map<int, std::unordered_map<int, double>> mna_matrix;
     
-    /// MNA excitation vector b (right-hand side)
+    // MNA excitation vector b (right-hand side)
     std::unordered_map<int, double> mna_vector;
     
-    /// Human-readable name for the circuit
+    // Human-readable name for the circuit
     std::string circuit_name;
     
     /**
@@ -105,10 +111,11 @@ protected:
      * @param voltageSourceId Unique voltage source identifier.
      * @param node1 Positive terminal node name.
      * @param node2 Negative terminal node name.
-     * @param voltage Source voltage in Volts.
+     * @param dc_voltage DC source voltage in Volts.
+     * @param ac_voltage AC source voltage in Volts (for AC analysis).
      * @throws std::runtime_error if ID already exists.
      */
-    void add_voltage_source(std::string& voltageSourceId, std::string& node1, std::string& node2, double voltage);
+    void add_voltage_source(std::string& voltageSourceId, std::string& node1, std::string& node2, double dc_voltage, double ac_voltage = 0);
     
     /**
      * @brief Adds a current source to the circuit.
@@ -139,6 +146,16 @@ protected:
      * @throws std::runtime_error if ID already exists.
      */
     void add_capacitor(std::string& capacitorId, std::string& node1, std::string& node2, double capacitance);
+    
+    /**
+     * @brief Parses voltage source values from remaining tokens on the line.
+     * @param iss Input stream positioned after node2.
+     * @param dc_value Output: DC voltage value.
+     * @param ac_value Output: AC voltage value.
+     * 
+     * Supported formats: "DC 5", "AC 3", "DC 5 AC 3", "AC 3 DC 5", "5" (plain DC)
+     */
+    void parse_voltage_source_values(std::istringstream& iss, double& dc_value, double& ac_value);
     
 public:
     /**
@@ -212,6 +229,24 @@ public:
      * @return Const reference to the nodes map.
      */
     const std::unordered_map<std::string, Node*>& get_nodes() const { return nodes; }
+
+    /**
+     * @brief Gets the node ID to name map.
+     * @return Const reference to the node ID to name map.
+     */
+    const std::map<int, std::string>& get_nodeId_map() const { return nodeId_map; }
+    
+    /**
+     * @brief Gets the extra variable ID to name map.
+     * @return Const reference to the extra variable map.
+     */
+    const std::map<int, std::string>& get_extraVarId_map() const { return extraVarId_map; }
+
+    /**
+     * @brief Gets ac components.
+     * @return Const reference to the components map.
+     */
+    const std::unordered_map<std::string, Component*>& get_ac_components() const { return ac_components; }
     
     /**
      * @brief Prints all node voltages.

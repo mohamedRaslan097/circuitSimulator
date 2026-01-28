@@ -26,13 +26,14 @@
  * **Supported Command-Line Options:**
  * - `-i <file>`: Input netlist file (required)
  * - `-o <file>`: Output results file (default: output.log)
+ * - `-ac_csv <file>`: AC analysis results CSV file (default: ac_analysis_results.csv)
  * - `-v`: Verbose mode (print results to console)
  * - `-p`: Pause before exit (wait for Enter key)
  * - `-h`: Show help message
  * 
  * **Example Usage:**
  * ```
- * circuit_simulator -i circuit.net -o results.txt -v
+ * circuit_simulator -i circuit.net -o results.txt -ac_csv ac_results.csv -v
  * ```
  * 
  * @example
@@ -59,6 +60,7 @@ class UI {
 private:
     std::string input_file;     // Path to input netlist file
     std::string output_file;    // Path to output results file
+    std::string ac_output_file; // Path to AC analysis results CSV file
     bool verbose;               // Whether to print results to console
     bool pause;                 // Whether to pause before exit
     std::string program_name;   // Name of the executable (from argv[0])
@@ -114,6 +116,12 @@ public:
      * @return Const reference to the input file path string.
      */
     const std::string& get_input_file() const { return input_file; }
+
+    /**
+     * @brief Gets the AC analysis output file path.
+     * @return Const reference to the AC analysis output file path string.
+     */
+    const std::string& get_ac_output_file() const { return ac_output_file; }
     
     /**
      * @brief Destructor - handles pause-before-exit if enabled.
