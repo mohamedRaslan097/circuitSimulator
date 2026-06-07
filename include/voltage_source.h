@@ -118,16 +118,17 @@ public:
     virtual void print(std::ostream& os = std::cout) const override;
     
     /**
-     * @brief Gets the extra variable index for source current.
-     * @return Index in the MNA system solution vector.
+     * @brief Introspection overrides for extra variables.
      */
-    int get_vc_id() const { return vc_id; }
+    virtual bool has_extra_var() const override { return true; }
+    virtual int get_vc_id() const override { return vc_id; }
+    virtual std::string get_stamping_label() const override { return stamping_id + componentId; }
     
     /**
      * @brief Sets the source current (called after solving MNA system).
      * @param i Current value in Amperes.
      */
-    void set_current(double i) { current = i; }
+    virtual void set_current(double i) override { current = i; }
 };
 
 #endif

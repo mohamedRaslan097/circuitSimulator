@@ -1,5 +1,9 @@
-#include "Include.h"
 #include "ui.h"
+#include "circuit.h"
+#include "circuit_builder.h"
+#include "circuit_printer.h"
+#include "simulator.h"
+#include "Timer.h"
 
 using namespace std;
 
@@ -15,8 +19,9 @@ int main(int argc, char* argv[]) {
     Timer timer;
 
     // Parse and assemble circuit
+    CircuitBuilder builder;
     Circuit circuit;
-    circuit.parse_netlist(ui.get_input_file());
+    builder.build(circuit, ui.get_input_file());
     circuit.assemble_MNA_system();
     
     // Run simulation

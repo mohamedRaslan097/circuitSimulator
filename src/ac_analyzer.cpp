@@ -25,7 +25,7 @@ void Ac_analyzer::initialize(const std::unordered_map<int,std::unordered_map<int
     log_ac_inst_solution(0.0, std::chrono::microseconds(0), 0);
 
     for(auto [id,var]: extra_vars)
-        if(toupper(var[1]) == Inductor::default_id[0])
+        if(toupper(var[1]) == 'L')
             this->solution[id] = std::complex<double>(nan(""), nan(""));
 
     for (const auto& [row, col_map] : mna_matrix) {

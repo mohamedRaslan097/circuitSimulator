@@ -75,6 +75,21 @@ public:
     virtual double get_current() = 0;
     
     /**
+     * @brief Sets the computed current through the component.
+     * @param i Current value in Amperes.
+     * @note Only overridden by components with extra MNA current variables.
+     */
+    virtual void set_current(double) {}
+
+    /**
+     * @brief Custom type and constraint introspection methods.
+     */
+    virtual bool is_ac() const { return false; }
+    virtual bool has_extra_var() const { return false; }
+    virtual int get_vc_id() const { return -1; }
+    virtual std::string get_stamping_label() const { return ""; }
+    
+    /**
      * @brief Generates MNA contributions for this component.
      * @return Component_contribution containing matrix and vector stamps.
      * 
@@ -104,6 +119,8 @@ public:
      * @param node_j Pointer to the negative terminal node.
      */
     Ac_component(const std::string& id, Node* node_i, Node* node_j);
+
+    virtual bool is_ac() const override { return true; }
 
     /**
      * @brief Generates AC MNA contributions for this component.

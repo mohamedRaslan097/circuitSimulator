@@ -1,5 +1,4 @@
 #include "simulator.h"
-#include "circuit.h"
 
 Simulator::Simulator(const std::string& ac_output_file) : solver(ac_output_file){}
 

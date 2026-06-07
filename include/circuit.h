@@ -13,12 +13,8 @@
 #include <unordered_map>
 #include <map>
 #include <sstream>
-#include "Resistor.h"
-#include "voltage_source.h"
-#include "current_source.h"
-#include "inductor.h"
-#include "capacitor.h"
-#include "ac_analyzer.h"
+#include "component.h"
+#include "component_descriptor.h"
 
 /**
  * @class Circuit
@@ -61,7 +57,7 @@
  * @endcode
  */
 class Circuit : public I_Printable {
-    friend void Ac_analyzer::log_ac_inst_solution(double frequency, std::chrono::microseconds duration, int converge_iters);
+    // friend void Ac_analyzer::log_ac_inst_solution(double frequency, std::chrono::microseconds duration, int converge_iters);
 private:
     static constexpr const char* default_name = "Circuit";  // Default circuit name
     
@@ -95,67 +91,13 @@ protected:
      * @param nodeId Node identifier string.
      */
     void add_node(std::string& nodeId);
-    
+
     /**
-     * @brief Adds a resistor to the circuit.
-     * @param resistorId Unique resistor identifier.
-     * @param node1 Positive terminal node name.
-     * @param node2 Negative terminal node name.
-     * @param resistance Resistance value in Ohms.
-     * @throws std::runtime_error if resistance is non-positive or ID already exists.
+     * @brief Adds a component to the circuit based on the descriptor.
+     * @param descriptor Parsed component descriptor containing type, nodes, and values.
+     * @throws std::runtime_error if the descriptor is invalid or contains unknown types.
      */
-    void add_resistor(std::string& resistorId, std::string& node1, std::string& node2, double resistance);
-    
-    /**
-     * @brief Adds a voltage source to the circuit.
-     * @param voltageSourceId Unique voltage source identifier.
-     * @param node1 Positive terminal node name.
-     * @param node2 Negative terminal node name.
-     * @param dc_voltage DC source voltage in Volts.
-     * @param ac_voltage AC source voltage in Volts (for AC analysis).
-     * @throws std::runtime_error if ID already exists.
-     */
-    void add_voltage_source(std::string& voltageSourceId, std::string& node1, std::string& node2, double dc_voltage, double ac_voltage = 0);
-    
-    /**
-     * @brief Adds a current source to the circuit.
-     * @param currentSourceId Unique current source identifier.
-     * @param node1 Positive terminal node name.
-     * @param node2 Negative terminal node name.
-     * @param current Source current in Amperes.
-     * @throws std::runtime_error if ID already exists.
-     */
-    void add_current_source(std::string& currentSourceId, std::string& node1, std::string& node2, double current);
-    
-    /**
-     * @brief Adds an inductor to the circuit.
-     * @param inductorId Unique inductor identifier.
-     * @param node1 Positive terminal node name.
-     * @param node2 Negative terminal node name.
-     * @param inductance Inductance value in Henries.
-     * @throws std::runtime_error if ID already exists.
-     */
-    void add_inductor(std::string& inductorId, std::string& node1, std::string& node2, double inductance);
-    
-    /**
-     * @brief Adds a capacitor to the circuit.
-     * @param capacitorId Unique capacitor identifier.
-     * @param node1 Positive terminal node name.
-     * @param node2 Negative terminal node name.
-     * @param capacitance Capacitance value in Farads.
-     * @throws std::runtime_error if ID already exists.
-     */
-    void add_capacitor(std::string& capacitorId, std::string& node1, std::string& node2, double capacitance);
-    
-    /**
-     * @brief Parses voltage source values from remaining tokens on the line.
-     * @param iss Input stream positioned after node2.
-     * @param dc_value Output: DC voltage value.
-     * @param ac_value Output: AC voltage value.
-     * 
-     * Supported formats: "DC 5", "AC 3", "DC 5 AC 3", "AC 3 DC 5", "5" (plain DC)
-     */
-    void parse_voltage_source_values(std::istringstream& iss, double& dc_value, double& ac_value);
+    void add_component(const ComponentDescriptor& descriptor);
     
 public:
     /**
@@ -165,24 +107,6 @@ public:
      * @note Automatically creates ground node "0" with id=0.
      */
     Circuit(std::string name=default_name);
-    
-    /**
-     * @brief Parses a SPICE-like netlist file and populates the circuit.
-     * @param filename Path to the netlist file.
-     * @throws std::runtime_error if file cannot be opened or parsing fails.
-     * 
-     * Supported component types: R, V, I, L, C (case insensitive).
-     * First line starting with '*' is treated as circuit name comment.
-     * Comments start with '*' and are ignored.
-     * 
-     * @par Time Complexity
-     * O(L × S) where L = number of lines, S = average line length
-     * Each component/node addition is O(1) amortized (hash map insertion)
-     * 
-     * @par Space Complexity
-     * O(N + C) where N = nodes created, C = components created
-     */
-    void parse_netlist(const std::string& filename);
     
     /**
      * @brief Assembles the MNA system matrix and vector.
@@ -288,6 +212,9 @@ public:
      * @brief Destructor - frees all allocated nodes and components.
      */
     ~Circuit();
+
+    friend class CircuitBuilder;
+    friend class CircuitPrinter;
 };
 
 #endif

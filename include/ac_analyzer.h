@@ -14,9 +14,7 @@
 #include <map>
 #include <complex>
 #include <fstream>
-#include "I_Printable.h"
 #include "component.h"
-#include "inductor.h"
 #include <chrono>
 
 /**

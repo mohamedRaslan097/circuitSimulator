@@ -1,4 +1,8 @@
 #include "circuit.h"
+#include "component_descriptor.h"
+#include "netlist_parser.h"
+#include "componentFactory.h"
+#include "circuit_printer.h"
 
 Circuit::Circuit(std::string name) : circuit_name(name) {
     nodes.clear();
@@ -29,134 +33,28 @@ void Circuit::add_node(std::string& nodeId) {
     }
 }
 
-void Circuit::add_resistor(std::string& resistorId, std::string& node1, std::string& node2, double resistance) {
-    if (resistance <= 0)
-        throw std::runtime_error("Resistor with ID " + resistorId + " has non-positive resistance.");
-    
-    if(components.find(resistorId) == components.end()) {
-        Resistor* resistor = new Resistor(resistorId, nodes[node1], nodes[node2], resistance);
-        components[resistorId] = resistor;
-    } else {
-        throw std::runtime_error("Resistor with ID " + resistorId + " already exists in the circuit.");
+void Circuit::add_component(const ComponentDescriptor& descriptor) {
+    if(descriptor.is_directive) {
+        throw std::runtime_error("Directives cannot be added as components to the circuit.");
     }
-}
 
-void Circuit::add_voltage_source(std::string& voltageSourceId, std::string& node1, std::string& node2, double dc_voltage, double ac_voltage) {
-    if(components.find(voltageSourceId) == components.end()) {
-        Voltage_source* voltageSource = new Voltage_source(voltageSourceId, nodes[node1], nodes[node2], dc_voltage, ac_voltage);
-        components[voltageSourceId] = voltageSource;
-        extraVarId_map[voltageSource->get_vc_id()] = Voltage_source::stamping_id + voltageSourceId;
-        ac_components[voltageSourceId] = voltageSource;
-    } else {
-        throw std::runtime_error("Voltage source with ID " + voltageSourceId + " already exists in the circuit.");
+    if(components.find(descriptor.id) != components.end()) {
+        throw std::runtime_error("Component with ID " + descriptor.id + " already exists in the circuit.");
     }
-}
 
-void Circuit::add_current_source(std::string& currentSourceId, std::string& node1, std::string& node2, double current) {
-    if(components.find(currentSourceId) == components.end()) {
-        Current_source* currentSource = new Current_source(currentSourceId, nodes[node1], nodes[node2], current);
-        components[currentSourceId] = currentSource;
-    } else {
-        throw std::runtime_error("Current source with ID " + currentSourceId + " already exists in the circuit.");
-    }
-}
+    ComponentFactory componentFactory;
+    Component* component = componentFactory.create_component(descriptor);
+    components[descriptor.id] = component;
 
-void Circuit::add_inductor(std::string& inductorId, std::string& node1, std::string& node2, double inductance) {
-    if(components.find(inductorId) == components.end()) {
-        Inductor* inductor = new Inductor(inductorId, nodes[node1], nodes[node2], inductance);
-        components[inductorId] = inductor;
-        extraVarId_map[inductor->get_vc_id()] = Inductor::stamping_id + inductorId;
-        ac_components[inductorId] = inductor;
-    } else {
-        throw std::runtime_error("Inductor with ID " + inductorId + " already exists in the circuit.");
-    }
-}
-
-void Circuit::add_capacitor(std::string& capacitorId, std::string& node1, std::string& node2, double capacitance) {
-    if(components.find(capacitorId) == components.end()) {
-        Capacitor* capacitor = new Capacitor(capacitorId, nodes[node1], nodes[node2], capacitance);
-        components[capacitorId] = capacitor;
-        ac_components[capacitorId] = capacitor;
-    } else {
-        throw std::runtime_error("Capacitor with ID " + capacitorId + " already exists in the circuit.");
-    }
-}
-
-void Circuit::parse_voltage_source_values(std::istringstream& iss, double& dc_value, double& ac_value) {
-    dc_value = 0;
-    ac_value = 0;
-    std::string token;
-    
-    while(iss >> token) {
-        if(token.size() >= 2 && token[0] == '/' && token[1] == '/') break; // Inline comment
-        if(token.size() >= 2 && toupper(token[0]) == 'D' && toupper(token[1]) == 'C') {
-            if(!(iss >> dc_value))
-                throw std::runtime_error("Error parsing DC value for voltage source");
-        } else if(token.size() >= 2 && toupper(token[0]) == 'A' && toupper(token[1]) == 'C') {
-            if(!(iss >> ac_value))
-                throw std::runtime_error("Error parsing AC value for voltage source");
-        } else {
-            dc_value = std::stod(token); // Plain number = DC value
+    if(component->is_ac()) {
+        ac_components[descriptor.id] = component;
+        if(component->has_extra_var()) {
+            extraVarId_map[component->get_vc_id()] = component->get_stamping_label();
         }
     }
 }
 
 // Core functions
-
-void Circuit::parse_netlist(const std::string& filename) {
-    std::ifstream file(filename);
-    
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open netlist file: " + filename);
-    }
-
-    std::streampos original_pos = file.tellg();
-    std::string first_line;
-    std::getline(file, first_line);
-    if(circuit_name == default_name && first_line[0] == '*') 
-        circuit_name = first_line.substr(2);
-    else
-        file.seekg(original_pos);
-
-    std::string line;
-    
-    while (std::getline(file, line))
-    {
-        std::istringstream iss(line);
-        std::string component_id;
-        
-        if(!(iss >> component_id)) continue; // Empty line
-        if(component_id[0] == '*') continue; // Comment line
-        
-        std::string node1_id, node2_id;
-        if(!(iss >> node1_id >> node2_id))
-            throw std::runtime_error("Error parsing netlist line for component: " + component_id);
-        
-        add_node(node1_id);
-        add_node(node2_id);
-        
-        if(toupper(component_id[0]) == Voltage_source::default_id[0]) {
-            double dc_value, ac_value;
-            parse_voltage_source_values(iss, dc_value, ac_value);
-            add_voltage_source(component_id, node1_id, node2_id, dc_value, ac_value);
-        } else {
-            double value;
-            if(!(iss >> value))
-                throw std::runtime_error("Error parsing value for: " + component_id);
-            
-            if(toupper(component_id[0]) == Resistor::default_id[0])
-                add_resistor(component_id, node1_id, node2_id, value);
-            else if(toupper(component_id[0]) == Current_source::default_id[0])
-                add_current_source(component_id, node1_id, node2_id, value);
-            else if(toupper(component_id[0]) == Inductor::default_id[0])
-                add_inductor(component_id, node1_id, node2_id, value);
-            else if(toupper(component_id[0]) == Capacitor::default_id[0])
-                add_capacitor(component_id, node1_id, node2_id, value);
-            else
-                throw std::runtime_error("Unknown component type in netlist: " + component_id);
-        }
-    }
-}
 
 void Circuit::assemble_MNA_system() {
     mna_matrix.clear();
@@ -178,11 +76,8 @@ void Circuit::deploy_dc_solution(const std::vector<double>& solution) {
             std::string node_name = nodeId_map.at(i);
             nodes[node_name]->voltage = solution[i];
         } else if (extraVarId_map.find(i) != extraVarId_map.end()) {
-            std::string componednt_name = extraVarId_map.at(i).substr(1);
-            if(extraVarId_map.at(i)[1] == Voltage_source::default_id[0])
-                dynamic_cast<Voltage_source*>(components[componednt_name])->set_current(solution[i]);
-            else 
-                dynamic_cast<Inductor*>(components[componednt_name])->set_current(solution[i]);
+            std::string component_name = extraVarId_map.at(i).substr(1);
+            components[component_name]->set_current(solution[i]);
         }else {
             throw std::runtime_error("Solution index " + std::to_string(i) + " does not correspond to any node or source.");
         }
@@ -193,114 +88,25 @@ void Circuit::deploy_dc_solution(const std::vector<double>& solution) {
 // Print functions
 
 void Circuit::print_nodes(std::ostream& os) const {
-    os << "Circuit Nodes:" << std::endl;
-    os << std::string(40, '-') << std::endl;
-    os << "Node(ID)"<< std::setw(16) <<"Voltage" << std::endl;
-    os << std::string(40, '-') << std::endl;
-    for (const auto& pair : nodeId_map)
-        os << *(nodes.at(pair.second)) << std::endl;
-    os << std::endl;
+    CircuitPrinter::print_nodes(*this, os);
 }
 
 void Circuit::print_components(std::ostream& os) const {
-    os << "Circuit Components:" << std::endl;
-    os << std::string(40, '-') << std::endl;
-    os << "T(ID)" << std::setw(7) << "(+)" << std::setw(6) << "(-)" << std::right << std::setw(16) << "Value" << " Unit" << std::endl;
-    os << std::string(40, '-') << std::endl;
-    for (const auto& pair : components) 
-        os << *(pair.second);
+    CircuitPrinter::print_components(*this, os);
 }
 
 void Circuit::print_MNA_system(std::ostream& os) const {
-    // Array of pointers to iterate both maps without merging
-    const std::map<int, std::string>* var_maps[] = {&nodeId_map, &extraVarId_map};
-    
-    // Print MNA system in Matrix form
-    os << "\nCircuit MNA System:" << std::endl;
-    os << std::string(40, '-') << std::endl;
-
-    // Print header row
-    os << std::setw(6) << " ";
-    for(const auto* map : var_maps) {
-        for(const auto& var : *map) {
-            os << std::setw(10) << var.second << " ";
-        }
-    }
-    os << std::setw(5) << "|" << std::setw(10) << "RHS" << std::endl;
-    
-    // Print each row
-    for(const auto* row_map : var_maps) {
-        for(const auto& row : *row_map) {
-            auto row_idx = row.first;
-            auto row_it = mna_matrix.find(row_idx);
-
-            os << std::setw(4) << row.second << "  [ ";
-
-            // Print all columns
-            for(const auto* col_map : var_maps) {
-                for(const auto& col : *col_map) {
-                    double value = 0.0;
-                    if(row_it != mna_matrix.end()) {
-                        auto col_it = row_it->second.find(col.first);
-                        if(col_it != row_it->second.end()) {
-                            value = col_it->second;
-                        }
-                    }
-                    os << std::setw(10) << value << " ";
-                }
-            }
-
-            double vec_value = 0.0;
-            auto it_vec = mna_vector.find(row_idx);
-            if(it_vec != mna_vector.end()) {
-                vec_value = it_vec->second;
-            }
-            os << "]   [ " << std::setw(10) << vec_value << " ]" << std::endl;
-        }
-    }
-    
-    // Print extra variables info after the matrix
-    if(extraVarId_map.size() > 0) {
-        os << "\nExtra variables (" << extraVarId_map.size() << "): ";
-        for(const auto& extra_var : extraVarId_map) {
-            os << extra_var.second << " ";
-        }
-        os << std::endl << std::endl;
-    }
+    CircuitPrinter::print_MNA_system(*this, os);
 }
 
 void Circuit::print_extraVars(std::ostream& os) const {
-    os << "Circuit VS Currents:" << std::endl;
-    os << std::string(40, '-') << std::endl;
-    os << "I_VS(ID)"<< std::setw(16) <<"Current" << std::endl;
-    os << std::string(40, '-') << std::endl;
-    for (const auto& [id, component_name] : extraVarId_map)
-    os << std::left << std::setw(10) << "I_VS(" + component_name.substr(1) + ")"
-       << std::right << std::fixed << std::setprecision(6) << std::setw(14) 
-       << components.at(component_name.substr(1))->get_current() * 1000.0 << " mA"<< std::endl;
+    CircuitPrinter::print_extraVars(*this, os);
 }
 
 void Circuit::print_solution(std::ostream& os) const {
-    os << "\n╔════════════════════════════════════╗\n"
-       <<   "║   DC ANALYSIS RESULTS              ║\n"
-       <<   "╚════════════════════════════════════╝\n\n";
-    print_nodes(os);
-    print_extraVars(os);
+    CircuitPrinter::print_solution(*this, os);
 }
 
 void Circuit::print(std::ostream& os) const {
-    os << std::string(40, '=') << std::endl;
-    os << "Circuit Name: " << circuit_name << std::endl;
-    os << std::string(40, '=') << std::endl << std::endl;
-
-    print_components(os);
-
-    if(mna_matrix.size() > 0)
-        print_MNA_system(os);
-
-    if(Node::valid)
-        print_solution(os);
-    else
-        print_nodes(os);
-    
+    CircuitPrinter::print(*this, os);
 }

@@ -1,6 +1,7 @@
 build/
 *.exe
 *.o
+*.d
 *.obj
 *.out
 *.app

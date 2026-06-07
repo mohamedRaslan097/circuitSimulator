@@ -9,6 +9,7 @@
 #include <chrono>
 #include <set>
 #include "circuit.h"
+#include "circuit_builder.h"
 
 // Constants
 const double TOLERANCE = 1e-8;
@@ -239,7 +240,7 @@ void test_single_resistor(MNATestRunner& runner) {
     netlist << "R1 1 2 1000\n";
     netlist.close();
     
-    circuit.parse_netlist("test1.net");
+    CircuitBuilder().build(circuit, "test1.net");
     circuit.assemble_MNA_system();
     
     // Capture output
@@ -288,7 +289,7 @@ void test_series_resistors(MNATestRunner& runner) {
     netlist << "R2 2 3 2000\n";
     netlist.close();
     
-    circuit.parse_netlist("test2.net");
+    CircuitBuilder().build(circuit, "test2.net");
     circuit.assemble_MNA_system();
     
     std::ostringstream output;
@@ -341,7 +342,7 @@ void test_parallel_resistors(MNATestRunner& runner) {
     netlist << "R2 1 2 2000\n";
     netlist.close();
     
-    circuit.parse_netlist("test3.net");
+    CircuitBuilder().build(circuit, "test3.net");
     circuit.assemble_MNA_system();
     
     std::ostringstream output;
@@ -380,7 +381,7 @@ void test_voltage_source(MNATestRunner& runner) {
     netlist << "R1 1 2 1000\n";
     netlist.close();
     
-    circuit.parse_netlist("test4.net");
+    CircuitBuilder().build(circuit, "test4.net");
     circuit.assemble_MNA_system();
     
     std::ostringstream output;
@@ -429,7 +430,7 @@ void test_current_source(MNATestRunner& runner) {
     netlist << "R1 2 0 1000\n";
     netlist.close();
     
-    circuit.parse_netlist("test5.net");
+    CircuitBuilder().build(circuit, "test5.net");
     circuit.assemble_MNA_system();
     
     std::ostringstream output;
@@ -473,7 +474,7 @@ void test_voltage_divider(MNATestRunner& runner) {
     netlist << "R2 2 0 1000\n";
     netlist.close();
     
-    circuit.parse_netlist("test6.net");
+    CircuitBuilder().build(circuit, "test6.net");
     circuit.assemble_MNA_system();
     
     std::ostringstream output;
@@ -527,7 +528,7 @@ void test_three_node_network(MNATestRunner& runner) {
     netlist << "R3 2 0 3000\n";
     netlist.close();
     
-    circuit.parse_netlist("test7.net");
+    CircuitBuilder().build(circuit, "test7.net");
     circuit.assemble_MNA_system();
     
     std::ostringstream output;
@@ -563,7 +564,7 @@ void test_matrix_symmetry(MNATestRunner& runner) {
     netlist << "R3 1 3 3000\n";
     netlist.close();
     
-    circuit.parse_netlist("test8.net");
+    CircuitBuilder().build(circuit, "test8.net");
     circuit.assemble_MNA_system();
     
     std::ostringstream output;
@@ -622,7 +623,7 @@ void test_original_circuit(MNATestRunner& runner) {
     netlist << "R5 2 3 100\n";
     netlist.close();
     
-    circuit.parse_netlist("test9.net");
+    CircuitBuilder().build(circuit, "test9.net");
     circuit.assemble_MNA_system();
     
     std::ostringstream output;
@@ -657,7 +658,7 @@ void test_ladder_10000_performance(MNATestRunner& runner) {
     std::cout << "  Loading netlist: tests/test_netlists/ladder_10000.net" << std::endl;
     
     auto start = std::chrono::high_resolution_clock::now();
-    circuit.parse_netlist("tests/test_netlists/ladder_10000.net");
+    CircuitBuilder().build(circuit, "tests/test_netlists/ladder_10000.net");
     circuit.assemble_MNA_system();
     auto end = std::chrono::high_resolution_clock::now();
     
@@ -681,7 +682,7 @@ void test_tree_d10_b3_performance(MNATestRunner& runner) {
     std::cout << "  Loading netlist: tests/test_netlists/tree_d10_b3.net" << std::endl;
     
     auto start = std::chrono::high_resolution_clock::now();
-    circuit.parse_netlist("tests/test_netlists/tree_d10_b3.net");
+    CircuitBuilder().build(circuit, "tests/test_netlists/tree_d10_b3.net");
     circuit.assemble_MNA_system();
     auto end = std::chrono::high_resolution_clock::now();
     

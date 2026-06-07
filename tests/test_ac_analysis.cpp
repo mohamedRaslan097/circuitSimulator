@@ -32,6 +32,7 @@
 #include <stdexcept>
 
 #include "simulator.h"
+#include "circuit_builder.h"
 
 // ============================================================================
 // CONSTANTS AND CONFIGURATION
@@ -289,7 +290,8 @@ private:
             Node::node_count = 0;
 
             Circuit circuit(test.name);
-            circuit.parse_netlist(netlist_file);
+            CircuitBuilder builder;
+            builder.build(circuit, netlist_file);
             circuit.assemble_MNA_system();
 
             Simulator simulator(csv_file);

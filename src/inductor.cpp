@@ -1,5 +1,4 @@
 #include "inductor.h"
-#include "voltage_source.h"
 
 Inductor::Inductor(const std::string& id, Node* ni, Node* nj, double l): Ac_component(id, ni, nj),vc_id(Node::node_count++), inductance(l), admittance(0), current(0.0) {}
 
