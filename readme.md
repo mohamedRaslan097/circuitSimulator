@@ -82,34 +82,46 @@ circuitSimulator/
 
 ### Building the Project
 
-**Compile the main program:**
-```bash
-# Build main program
-g++ -std=c++17 -Wall -g -I./include src/*.cpp main/main.cpp -o build/debug/main.exe
+The project is built using a professional build environment with a comprehensive [Makefile](Makefile) supporting multiple compiler configuration flows on Windows.
 
-# Build tests
-g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_components.cpp -o build/debug/test_components.exe
-g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_netlist_parsing.cpp -o build/debug/test_netlist_parsing.exe
-g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_mna_assembly.cpp -o build/debug/test_mna_assembly.exe
-g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_dc_analysis.cpp -o build/debug/test_dc_analysis.exe
-g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_dc_analysis_lc.cpp -o build/debug/test_dc_analysis_lc.exe
-g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_ac_analysis.cpp -o build/debug/test_ac_analysis.exe
+**Command-line Build:**
+```bash
+# Build the main simulation program (bin/circuit_simulator.exe)
+make
+
+# Clean up all build artifacts, dependency tracking files, and logs
+make clean
+
+# Rebuild everything from scratch
+make rebuild
 ```
 
 ### Running the Simulator
 
+You can execute the binary directly or utilize the automated Makefile run integration.
+
+**1. Running via Makefile:**
+```bash
+# Run simulator with default configurations (reads main/netlist.txt)
+make run
+
+# Run simulator with custom netlist file and custom outputs
+make run IN=main/netlist.txt OUT=main/output.log CSV=main/ac_analysis_results.csv
+```
+
+**2. Running the Binary Directly:**
 ```bash
 # Basic usage
-./build/debug/main.exe -i netlist.txt
+./bin/circuit_simulator.exe -i main/netlist.txt
 
-# With output file
-./build/debug/main.exe -i circuit.net -o results.txt
+# Specify custom output and AC solution logging paths
+./bin/circuit_simulator.exe -i main/netlist.txt -o main/output.log -ac_csv main/ac_analysis_results.csv
 
-# Verbose mode
-./build/debug/main.exe -i circuit.net -v
+# Run in Verbose mode to display simulation logs to standard output
+./bin/circuit_simulator.exe -i main/netlist.txt -v
 
-# Show help
-./build/debug/main.exe -h
+# Show helper documentation and details
+./bin/circuit_simulator.exe -h
 ```
 
 #### Command-Line Options
@@ -118,19 +130,25 @@ g++ -std=c++17 -Wall -g -I./include src/*.cpp tests/test_ac_analysis.cpp -o buil
 |------|-------------|
 | `-i <file>` | Input netlist file (required) |
 | `-o <file>` | Output results file (default: output.log) |
+| `-ac_csv <file>` | Output AC simulation CSV file (default: ac_analysis_results.csv) |
 | `-v` | Verbose mode (display results to console) |
 | `-h` | Show help message |
 
 ### Running Tests
 
-**Run tests:**
+A comprehensive unit and integration test suite is located in the [tests/](tests/) folder. You can build and run all test programs automatically.
+
+**Run All Tests:**
 ```bash
-./build/debug/test_components.exe
-./build/debug/test_netlist_parsing.exe
-./build/debug/test_mna_assembly.exe
-./build/debug/test_dc_analysis.exe
-./build/debug/test_dc_analysis_lc.exe
-./build/debug/test_ac_analysis.exe
+# Builds and executes all tests, verifying results and creating dated logs
+make test
+```
+
+When you run `make test`, all test outcomes are reported directly in the console. Executable debug binaries are generated in the `build/debug/tests/` directory, while their exact stream and matrix logging outputs are preserved in a subfolder within `testOutput/` named after the current date (`yy_MM_dd`).
+
+If you wish to only compile the test binaries without execution:
+```bash
+make build-tests
 ```
 
 #### Test Suites
